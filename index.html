@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Kururu Data portfolio site inspired by pivot-door architecture.">
+  <link rel="icon" href="data:,">
   <title>Kururu Data | Pivot Craft</title>
   <style>
     :root{
@@ -59,6 +60,16 @@
     .num{color:var(--deep);font:700 13px Consolas,monospace}
     .card h3{margin:18px 0 8px;font-size:22px}
     .card p,.txt{color:var(--muted);margin:0}
+    .project-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      margin-top:18px;
+      color:var(--deep);
+      font-weight:800;
+      text-decoration:none;
+    }
+    .project-link:hover{text-decoration:underline}
 
     .company-placeholder{
       margin-top:14px;
@@ -130,6 +141,7 @@
           <span class="num">P-01</span>
           <h3>Microsoft Entra ID</h3>
           <p>認証基盤のクラウド側設計、アクセス制御、運用性の高いIDガバナンスを整理します。</p>
+          <a class="project-link" href="entra-group-audit.html">Entra IDグループ監査を見る <span aria-hidden="true">→</span></a>
         </article>
         <article class="card">
           <span class="num">P-02</span>
