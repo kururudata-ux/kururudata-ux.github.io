@@ -14,6 +14,7 @@
       --line:#d5ddd7;
       --deep:#1f4b3a;
       --deep-2:#2b6a52;
+      --deep-3:#143528;
       --deep-soft:#e8f0ec;
     }
     *{box-sizing:border-box}
@@ -57,11 +58,17 @@
     <div class="wrap head">
       <a class="brand" href="#top" aria-label="Kururu Data home">
         <svg width="42" height="42" viewBox="0 0 42 42" role="img" aria-label="Kururu pivot icon">
-          <rect x="1" y="1" width="40" height="40" rx="10" fill="#1f4b3a"/>
-          <rect x="10" y="8" width="3" height="26" rx="1.5" fill="#e8f0ec"/>
-          <rect x="13" y="9" width="17" height="24" rx="2" fill="none" stroke="#e8f0ec" stroke-width="2"/>
-          <circle cx="13" cy="21" r="3" fill="#e8f0ec"/>
-          <path d="M22 14l7 7-7 7" fill="none" stroke="#e8f0ec" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="kdg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#2b6a52"/>
+              <stop offset="1" stop-color="#143528"/>
+            </linearGradient>
+          </defs>
+          <rect x="1" y="1" width="40" height="40" rx="10" fill="url(#kdg)"/>
+          <circle cx="11.5" cy="21" r="3.2" fill="#e8f0ec"/>
+          <path d="M11.5 9.5v23" stroke="#e8f0ec" stroke-width="2.3" stroke-linecap="round"/>
+          <path d="M14 10.8L28.5 14.8V27.2L14 31.2Z" fill="none" stroke="#e8f0ec" stroke-width="2.1" stroke-linejoin="round"/>
+          <path d="M19.5 14.5c5 2.6 5 10.4 0 13" fill="none" stroke="#e8f0ec" stroke-opacity=".7" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
         <strong>Kururu Data</strong>
       </a>
@@ -86,13 +93,21 @@
       </div>
       <div class="icon-card" aria-hidden="true">
         <svg width="100%" viewBox="0 0 240 240">
+          <defs>
+            <linearGradient id="kbg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#2b6a52"/>
+              <stop offset="1" stop-color="#143528"/>
+            </linearGradient>
+          </defs>
           <rect x="8" y="8" width="224" height="224" rx="38" fill="var(--deep-soft)" stroke="var(--line)"/>
-          <rect x="68" y="48" width="10" height="144" rx="5" fill="var(--deep)"/>
-          <rect x="78" y="58" width="96" height="124" rx="10" fill="none" stroke="var(--deep)" stroke-width="8"/>
-          <circle cx="78" cy="120" r="14" fill="var(--deep)"/>
-          <path d="M132 78l44 42-44 42" fill="none" stroke="var(--deep)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="120" cy="120" r="82" fill="none" stroke="var(--deep)" stroke-opacity=".16" stroke-width="10"/>
+          <rect x="64" y="50" width="16" height="140" rx="8" fill="url(#kbg)"/>
+          <circle cx="72" cy="120" r="14" fill="var(--deep)"/>
+          <path d="M84 54L166 76V164L84 186Z" fill="none" stroke="url(#kbg)" stroke-width="10" stroke-linejoin="round"/>
+          <path d="M114 76c30 16 30 72 0 88" fill="none" stroke="var(--deep)" stroke-opacity=".7" stroke-width="8" stroke-linecap="round"/>
+          <path d="M152 102l20 18-20 18" fill="none" stroke="var(--deep-3)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <p class="icon-label">Original icon inspired by pivot hinge structure.</p>
+        <p class="icon-label">Original emblem: pivot axis + opening panel motif.</p>
       </div>
     </section>
 
