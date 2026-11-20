@@ -1,0 +1,6203 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
+  <title>Entra ID Group Audit Report</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+      --cp-table-header: #0b3d2e;
+      --cp-table-header-alt: #146b4f;
+      --cp-table-header-fg: #ffffff;
+      --cp-gradient-end: #e2eee7;
+      --cp-gradient-deep: #062d22;
+      --cp-gradient-mid: #0f5942;
+      --cp-gradient-soft: #d7e9df;
+      --cp-critical-bg: #fde7e9;
+      --cp-warning-bg: #fff4ce;
+      --cp-review-bg: #e1efe8;
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+      --cp-table-header: #08291f;
+      --cp-table-header-alt: #11543f;
+      --cp-table-header-fg: #ffffff;
+      --cp-gradient-end: #172d25;
+      --cp-gradient-deep: #041d16;
+      --cp-gradient-mid: #0b4936;
+      --cp-gradient-soft: #173a2e;
+      --cp-critical-bg: #522126;
+      --cp-warning-bg: #493b18;
+      --cp-review-bg: #173a2e;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: linear-gradient(145deg, var(--cp-bg), var(--cp-gradient-end));
+      color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+    }
+    .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 16px;
+      background: linear-gradient(180deg, var(--cp-panel-strong), var(--cp-gradient-soft));
+      border-right: 1px solid var(--cp-border);
+    }
+    .brand { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+    .sidebar-subtitle { color: var(--cp-text-muted); font-size: 12px; margin: 0 0 20px; }
+    .language-button {
+      width: 100%;
+      border: 1px solid var(--cp-table-header);
+      border-radius: 0.625rem;
+      padding: 9px 12px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--cp-gradient-deep), var(--cp-gradient-mid));
+      color: var(--cp-table-header-fg);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+    }
+    .language-button:hover { background: linear-gradient(135deg, var(--cp-gradient-mid), var(--cp-table-header-alt)); }
+    .nav-title { color: var(--cp-text-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; margin: 12px 8px 6px; text-transform: uppercase; }
+    .nav-list { list-style: none; margin: 0; padding: 0; }
+    .nav-list a {
+      display: block;
+      padding: 8px 10px;
+      margin: 2px 0;
+      border-left: 3px solid transparent;
+      border-radius: 0.625rem;
+      color: var(--cp-text);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .nav-list a:hover, .nav-list a.active {
+      background: var(--cp-review-bg);
+      border-left-color: var(--cp-table-header);
+    }
+    main { min-width: 0; padding: 32px clamp(20px, 4vw, 56px) 64px; }
+    .page-header, section {
+      max-width: 1500px;
+      margin: 0 auto 24px;
+      padding: 24px;
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      box-shadow: var(--cp-shadow);
+      scroll-margin-top: 16px;
+    }
+    .page-header {
+      border-top: 6px solid var(--cp-table-header);
+      background: linear-gradient(135deg, var(--cp-surface), var(--cp-gradient-soft));
+    }
+    h1 { margin: 0 0 12px; font-size: clamp(28px, 4vw, 44px); line-height: 1.12; }
+    h2 { margin: 0 0 16px; font-size: 24px; }
+    .meta { margin: 3px 0; color: var(--cp-text-muted); font-size: 13px; }
+    .status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .status-card { padding: 16px; border: 1px solid var(--cp-border); border-left-width: 5px; border-radius: 0.625rem; }
+    .status-card strong { display: block; font-size: 13px; margin-bottom: 6px; }
+    .status-card .count { font-size: 30px; font-weight: 700; }
+    .critical { border-left-color: var(--cp-danger); background: var(--cp-critical-bg); }
+    .warning { border-left-color: var(--cp-warning); background: var(--cp-warning-bg); }
+    .review { border-left-color: var(--cp-link); background: var(--cp-review-bg); }
+    .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--cp-border); border-radius: 0.625rem; }
+    table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13px; }
+    th, td { border: 1px solid var(--cp-border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; background: linear-gradient(135deg, var(--cp-gradient-deep), var(--cp-gradient-mid)); color: var(--cp-table-header-fg); z-index: 1; }
+    tbody tr:nth-child(even) { background: var(--cp-surface-soft); }
+    tr.risk-critical { background: var(--cp-critical-bg); }
+    tr.risk-warning { background: var(--cp-warning-bg); }
+    tr.risk-review { background: var(--cp-review-bg); }
+    .section-count { display: inline-block; padding: 3px 9px; margin-bottom: 12px; border-radius: 0.625rem; background: var(--cp-review-bg); font-weight: 700; }
+    .mermaid { overflow: auto; padding: 16px; border: 1px solid var(--cp-border); border-radius: 0.625rem; background: var(--cp-surface); }
+    .muted { color: var(--cp-text-muted); font-size: 12px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0 0; font-size: 12px; }
+    .legend span { padding: 5px 9px; border-radius: 0.625rem; }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: sticky; z-index: 20; height: auto; padding: 12px 16px; border-right: 0; border-bottom: 1px solid var(--cp-border); }
+      .sidebar-subtitle, .nav-title { display: none; }
+      .language-button { width: auto; margin: 0 0 8px; }
+      .nav-list { display: flex; overflow-x: auto; gap: 4px; }
+      .nav-list a { white-space: nowrap; }
+      main { padding: 20px 12px 48px; }
+      .status-grid { grid-template-columns: 1fr; }
+      .page-header, section { padding: 18px; }
+    }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', maxTextSize: 1000000 });
+  </script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <p class="brand">Entra ID Audit</p>
+      <p class="sidebar-subtitle" data-ja="グループ構造・利用状況レポート" data-en="Group structure and usage report">グループ構造・利用状況レポート</p>
+      <button id="languageToggle" class="language-button" type="button">English</button>
+      <p class="nav-title" data-ja="レポート項目" data-en="Report index">レポート項目</p>
+      <nav aria-label="Report index">
+        <ul class="nav-list">
+          <li><a href="#overview" data-ja="概要" data-en="Overview">概要</a></li>
+          <li><a href="#priority" data-ja="優先対応" data-en="Priority actions">優先対応</a></li>
+          <li><a href="#outputs" data-ja="出力ファイル" data-en="Output files">出力ファイル</a></li>
+          <li><a href="#cycles" data-ja="循環依存" data-en="Circular dependencies">循環依存</a></li>
+          <li><a href="#empty-groups" data-ja="空グループ" data-en="Empty groups">空グループ</a></li>
+          <li><a href="#small-groups" data-ja="5名以下グループ" data-en="Groups with 1-5 members">5名以下グループ</a></li>
+          <li><a href="#unused-users" data-ja="未使用ユーザー候補" data-en="Potentially unused users">未使用ユーザー候補</a></li>
+          <li><a href="#cycle-map" data-ja="循環関係図" data-en="Cycle map">循環関係図</a></li>
+          <li><a href="#dependency-map" data-ja="依存関係図" data-en="Dependency map">依存関係図</a></li>
+        </ul>
+      </nav>
+    </aside>
+    <main>
+      <header class="page-header" id="overview">
+        <h1 data-ja="Entra ID グループ監査レポート" data-en="Entra ID Group Audit Report">Entra ID グループ監査レポート</h1>
+        <p class="meta"><strong data-ja="データソース" data-en="Data source">データソース</strong>: Generated sample data (10000 groups)</p>
+        <p class="meta"><strong data-ja="生成日時" data-en="Generated at">生成日時</strong>: 2026-11-21T03:38:22.5596130+09:00</p>
+        <p class="meta"><strong data-ja="テナントID" data-en="Tenant ID">テナントID</strong>: sample-tenant</p>
+        <p class="meta"><strong data-ja="実行アカウント" data-en="Signed-in account">実行アカウント</strong>: sample-data@example.invalid</p>
+        <h2 data-ja="概要" data-en="Summary">概要</h2>
+        <div class="table-wrap"><table>
+<thead><tr>
+<th data-ja="総グループ数" data-en="TotalGroups">総グループ数</th>
+<th data-ja="空グループ" data-en="EmptyGroups">空グループ</th>
+<th data-ja="メンバー1～5名" data-en="GroupsWithOneToFiveMembers">メンバー1～5名</th>
+<th data-ja="子グループを持つグループ" data-en="GroupsWithDirectSubGroups">子グループを持つグループ</th>
+<th data-ja="依存関係数" data-en="TotalGroupDependencyEdges">依存関係数</th>
+<th data-ja="循環セット数" data-en="CircularGroupSets">循環セット数</th>
+<th data-ja="グループ内ユーザー数" data-en="UsersReferencedInGroups">グループ内ユーザー数</th>
+<th data-ja="未使用ユーザー候補" data-en="PotentiallyUnusedUsersInGroup">未使用ユーザー候補</th>
+<th data-ja="未使用判定日数" data-en="InactiveThresholdDays">未使用判定日数</th>
+<th data-ja="サインイン確認" data-en="SignInActivityChecked">サインイン確認</th>
+</tr></thead>
+<tbody>
+<tr class="">
+<td>10000</td>
+<td>496</td>
+<td>2499</td>
+<td>505</td>
+<td>505</td>
+<td>2</td>
+<td>25000</td>
+<td>3101</td>
+<td>90</td>
+<td>True</td>
+</tr>
+</tbody>
+</table></div>
+
+      </header>
+
+      <section id="priority">
+        <h2 data-ja="優先対応" data-en="Priority actions">優先対応</h2>
+        <div class="status-grid">
+          <article class="status-card critical">
+            <strong data-ja="緊急: 循環依存" data-en="Urgent: Circular dependencies">緊急: 循環依存</strong>
+            <div class="count">2</div>
+            <span data-ja="権限評価やメンバー展開が複雑化するため、早急な構造見直しが必要です。" data-en="Review the structure immediately because cycles complicate permission evaluation and membership expansion.">権限評価やメンバー展開が複雑化するため、早急な構造見直しが必要です。</span>
+          </article>
+          <article class="status-card warning">
+            <strong data-ja="要対応: 未使用ユーザー候補" data-en="Action required: Potentially unused users">要対応: 未使用ユーザー候補</strong>
+            <div class="count">3101</div>
+            <span data-ja="無効アカウントや長期未使用ユーザーの所属継続要否を確認してください。" data-en="Confirm whether disabled or inactive accounts should remain in their groups.">無効アカウントや長期未使用ユーザーの所属継続要否を確認してください。</span>
+          </article>
+          <article class="status-card review">
+            <strong data-ja="要確認: 空・少人数グループ" data-en="Review: Empty or small groups">要確認: 空・少人数グループ</strong>
+            <div class="count">2995</div>
+            <span data-ja="利用目的・所有者・廃止可否を確認してください。" data-en="Validate purpose, ownership, and whether these groups can be retired.">利用目的・所有者・廃止可否を確認してください。</span>
+          </article>
+        </div>
+        <div class="legend">
+          <span class="critical" data-ja="赤: 緊急対応" data-en="Red: Urgent">赤: 緊急対応</span>
+          <span class="warning" data-ja="黄: 要対応" data-en="Yellow: Action required">黄: 要対応</span>
+          <span class="review" data-ja="青: 要確認" data-en="Blue: Review">青: 要確認</span>
+        </div>
+      </section>
+
+      <section id="outputs">
+        <h2 data-ja="出力ファイル" data-en="Output files">出力ファイル</h2>
+        <div class="table-wrap"><table>
+<thead><tr>
+<th data-ja="出力種別" data-en="FileKey">出力種別</th>
+<th data-ja="ファイル" data-en="File">ファイル</th>
+</tr></thead>
+<tbody>
+<tr class="">
+<td>SummaryJson</td>
+<td>Summary.json</td>
+</tr>
+<tr class="">
+<td>GroupsCsv</td>
+<td>Groups.csv</td>
+</tr>
+<tr class="">
+<td>GroupMembersCsv</td>
+<td>GroupMemberSummary.csv</td>
+</tr>
+<tr class="">
+<td>GroupDependenciesCsv</td>
+<td>GroupDependencies.csv</td>
+</tr>
+<tr class="">
+<td>GroupCyclesCsv</td>
+<td>GroupCycles.csv</td>
+</tr>
+<tr class="">
+<td>UnusedUsersCsv</td>
+<td>PotentiallyUnusedUsers.csv</td>
+</tr>
+<tr class="">
+<td>EmptyGroupsCsv</td>
+<td>EmptyGroups.csv</td>
+</tr>
+<tr class="">
+<td>SmallGroupsCsv</td>
+<td>GroupsWithOneToFiveMembers.csv</td>
+</tr>
+<tr class="">
+<td>MermaidDependency</td>
+<td>GroupDependencies.mmd</td>
+</tr>
+<tr class="">
+<td>MermaidCycles</td>
+<td>GroupCycles.mmd</td>
+</tr>
+<tr class="">
+<td>MarkdownReport</td>
+<td>Report.md</td>
+</tr>
+<tr class="">
+<td>HtmlReport</td>
+<td>Report.html</td>
+</tr>
+</tbody>
+</table></div>
+
+      </section>
+
+      <section id="cycles">
+        <h2 data-ja="循環依存" data-en="Circular dependencies">循環依存</h2>
+        <span class="section-count">2</span>
+        <div class="table-wrap"><table>
+<thead><tr>
+<th data-ja="循環ID" data-en="CycleId">循環ID</th>
+<th data-ja="グループ数" data-en="GroupCount">グループ数</th>
+<th data-ja="グループ名" data-en="GroupDisplayNames">グループ名</th>
+</tr></thead>
+<tbody>
+<tr class="risk-critical">
+<td>C1</td>
+<td>3</td>
+<td>Sample Group 00003 -&gt; Sample Group 00002 -&gt; Sample Group 00001</td>
+</tr>
+<tr class="risk-critical">
+<td>C2</td>
+<td>3</td>
+<td>Sample Group 00103 -&gt; Sample Group 00102 -&gt; Sample Group 00101</td>
+</tr>
+</tbody>
+</table></div>
+
+      </section>
+
+      <section id="empty-groups">
+        <h2 data-ja="空グループ" data-en="Empty groups">空グループ</h2>
+        <span class="section-count">496</span>
+        <p data-ja="先頭200件を表示しています。全件は EmptyGroups.csv を参照してください。" data-en="Showing the first 200 rows. See EmptyGroups.csv for the full dataset.">先頭200件を表示しています。全件は EmptyGroups.csv を参照してください。</p>
+        <div class="table-wrap"><table>
+<thead><tr>
+<th data-ja="グループID" data-en="GroupId">グループID</th>
+<th data-ja="グループ名" data-en="GroupName">グループ名</th>
+<th data-ja="直接メンバー合計" data-en="DirectMembers">直接メンバー合計</th>
+</tr></thead>
+<tbody>
+<tr class="risk-review">
+<td>sample-group-00010</td>
+<td>Sample Group 00010</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00030</td>
+<td>Sample Group 00030</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00050</td>
+<td>Sample Group 00050</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00070</td>
+<td>Sample Group 00070</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00090</td>
+<td>Sample Group 00090</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00110</td>
+<td>Sample Group 00110</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00130</td>
+<td>Sample Group 00130</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00150</td>
+<td>Sample Group 00150</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00170</td>
+<td>Sample Group 00170</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00190</td>
+<td>Sample Group 00190</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00210</td>
+<td>Sample Group 00210</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00230</td>
+<td>Sample Group 00230</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00250</td>
+<td>Sample Group 00250</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00270</td>
+<td>Sample Group 00270</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00290</td>
+<td>Sample Group 00290</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00310</td>
+<td>Sample Group 00310</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00330</td>
+<td>Sample Group 00330</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00350</td>
+<td>Sample Group 00350</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00370</td>
+<td>Sample Group 00370</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00390</td>
+<td>Sample Group 00390</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00410</td>
+<td>Sample Group 00410</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00430</td>
+<td>Sample Group 00430</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00450</td>
+<td>Sample Group 00450</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00470</td>
+<td>Sample Group 00470</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00490</td>
+<td>Sample Group 00490</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00510</td>
+<td>Sample Group 00510</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00530</td>
+<td>Sample Group 00530</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00550</td>
+<td>Sample Group 00550</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00570</td>
+<td>Sample Group 00570</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00590</td>
+<td>Sample Group 00590</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00610</td>
+<td>Sample Group 00610</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00630</td>
+<td>Sample Group 00630</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00650</td>
+<td>Sample Group 00650</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00670</td>
+<td>Sample Group 00670</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00690</td>
+<td>Sample Group 00690</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00710</td>
+<td>Sample Group 00710</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00730</td>
+<td>Sample Group 00730</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00750</td>
+<td>Sample Group 00750</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00770</td>
+<td>Sample Group 00770</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00790</td>
+<td>Sample Group 00790</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00810</td>
+<td>Sample Group 00810</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00830</td>
+<td>Sample Group 00830</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00850</td>
+<td>Sample Group 00850</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00870</td>
+<td>Sample Group 00870</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00890</td>
+<td>Sample Group 00890</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00910</td>
+<td>Sample Group 00910</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00930</td>
+<td>Sample Group 00930</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00950</td>
+<td>Sample Group 00950</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00990</td>
+<td>Sample Group 00990</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01010</td>
+<td>Sample Group 01010</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01030</td>
+<td>Sample Group 01030</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01050</td>
+<td>Sample Group 01050</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01070</td>
+<td>Sample Group 01070</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01090</td>
+<td>Sample Group 01090</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01110</td>
+<td>Sample Group 01110</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01130</td>
+<td>Sample Group 01130</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01150</td>
+<td>Sample Group 01150</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01170</td>
+<td>Sample Group 01170</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01190</td>
+<td>Sample Group 01190</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01210</td>
+<td>Sample Group 01210</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01230</td>
+<td>Sample Group 01230</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01250</td>
+<td>Sample Group 01250</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01270</td>
+<td>Sample Group 01270</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01290</td>
+<td>Sample Group 01290</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01310</td>
+<td>Sample Group 01310</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01330</td>
+<td>Sample Group 01330</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01350</td>
+<td>Sample Group 01350</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01370</td>
+<td>Sample Group 01370</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01390</td>
+<td>Sample Group 01390</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01410</td>
+<td>Sample Group 01410</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01430</td>
+<td>Sample Group 01430</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01450</td>
+<td>Sample Group 01450</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01470</td>
+<td>Sample Group 01470</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01490</td>
+<td>Sample Group 01490</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01510</td>
+<td>Sample Group 01510</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01530</td>
+<td>Sample Group 01530</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01550</td>
+<td>Sample Group 01550</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01570</td>
+<td>Sample Group 01570</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01590</td>
+<td>Sample Group 01590</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01610</td>
+<td>Sample Group 01610</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01630</td>
+<td>Sample Group 01630</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01650</td>
+<td>Sample Group 01650</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01670</td>
+<td>Sample Group 01670</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01690</td>
+<td>Sample Group 01690</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01710</td>
+<td>Sample Group 01710</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01730</td>
+<td>Sample Group 01730</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01750</td>
+<td>Sample Group 01750</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01770</td>
+<td>Sample Group 01770</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01790</td>
+<td>Sample Group 01790</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01810</td>
+<td>Sample Group 01810</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01830</td>
+<td>Sample Group 01830</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01850</td>
+<td>Sample Group 01850</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01870</td>
+<td>Sample Group 01870</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01890</td>
+<td>Sample Group 01890</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01910</td>
+<td>Sample Group 01910</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01930</td>
+<td>Sample Group 01930</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01950</td>
+<td>Sample Group 01950</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01970</td>
+<td>Sample Group 01970</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-01990</td>
+<td>Sample Group 01990</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02010</td>
+<td>Sample Group 02010</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02030</td>
+<td>Sample Group 02030</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02050</td>
+<td>Sample Group 02050</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02070</td>
+<td>Sample Group 02070</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02090</td>
+<td>Sample Group 02090</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02110</td>
+<td>Sample Group 02110</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02130</td>
+<td>Sample Group 02130</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02150</td>
+<td>Sample Group 02150</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02170</td>
+<td>Sample Group 02170</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02190</td>
+<td>Sample Group 02190</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02210</td>
+<td>Sample Group 02210</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02230</td>
+<td>Sample Group 02230</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02250</td>
+<td>Sample Group 02250</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02270</td>
+<td>Sample Group 02270</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02290</td>
+<td>Sample Group 02290</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02310</td>
+<td>Sample Group 02310</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02330</td>
+<td>Sample Group 02330</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02350</td>
+<td>Sample Group 02350</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02370</td>
+<td>Sample Group 02370</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02390</td>
+<td>Sample Group 02390</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02410</td>
+<td>Sample Group 02410</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02430</td>
+<td>Sample Group 02430</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02450</td>
+<td>Sample Group 02450</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02470</td>
+<td>Sample Group 02470</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02490</td>
+<td>Sample Group 02490</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02510</td>
+<td>Sample Group 02510</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02530</td>
+<td>Sample Group 02530</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02550</td>
+<td>Sample Group 02550</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02570</td>
+<td>Sample Group 02570</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02590</td>
+<td>Sample Group 02590</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02610</td>
+<td>Sample Group 02610</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02630</td>
+<td>Sample Group 02630</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02650</td>
+<td>Sample Group 02650</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02670</td>
+<td>Sample Group 02670</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02690</td>
+<td>Sample Group 02690</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02710</td>
+<td>Sample Group 02710</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02730</td>
+<td>Sample Group 02730</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02750</td>
+<td>Sample Group 02750</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02770</td>
+<td>Sample Group 02770</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02790</td>
+<td>Sample Group 02790</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02810</td>
+<td>Sample Group 02810</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02830</td>
+<td>Sample Group 02830</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02850</td>
+<td>Sample Group 02850</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02870</td>
+<td>Sample Group 02870</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02890</td>
+<td>Sample Group 02890</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02930</td>
+<td>Sample Group 02930</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02950</td>
+<td>Sample Group 02950</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02970</td>
+<td>Sample Group 02970</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-02990</td>
+<td>Sample Group 02990</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03010</td>
+<td>Sample Group 03010</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03030</td>
+<td>Sample Group 03030</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03050</td>
+<td>Sample Group 03050</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03070</td>
+<td>Sample Group 03070</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03090</td>
+<td>Sample Group 03090</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03110</td>
+<td>Sample Group 03110</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03130</td>
+<td>Sample Group 03130</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03150</td>
+<td>Sample Group 03150</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03170</td>
+<td>Sample Group 03170</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03190</td>
+<td>Sample Group 03190</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03210</td>
+<td>Sample Group 03210</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03230</td>
+<td>Sample Group 03230</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03250</td>
+<td>Sample Group 03250</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03270</td>
+<td>Sample Group 03270</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03290</td>
+<td>Sample Group 03290</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03310</td>
+<td>Sample Group 03310</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03330</td>
+<td>Sample Group 03330</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03350</td>
+<td>Sample Group 03350</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03370</td>
+<td>Sample Group 03370</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03390</td>
+<td>Sample Group 03390</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03410</td>
+<td>Sample Group 03410</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03430</td>
+<td>Sample Group 03430</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03450</td>
+<td>Sample Group 03450</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03470</td>
+<td>Sample Group 03470</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03490</td>
+<td>Sample Group 03490</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03510</td>
+<td>Sample Group 03510</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03530</td>
+<td>Sample Group 03530</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03550</td>
+<td>Sample Group 03550</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03570</td>
+<td>Sample Group 03570</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03590</td>
+<td>Sample Group 03590</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03610</td>
+<td>Sample Group 03610</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03630</td>
+<td>Sample Group 03630</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03650</td>
+<td>Sample Group 03650</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03670</td>
+<td>Sample Group 03670</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03690</td>
+<td>Sample Group 03690</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03710</td>
+<td>Sample Group 03710</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03730</td>
+<td>Sample Group 03730</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03750</td>
+<td>Sample Group 03750</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03770</td>
+<td>Sample Group 03770</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03790</td>
+<td>Sample Group 03790</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03810</td>
+<td>Sample Group 03810</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03830</td>
+<td>Sample Group 03830</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03850</td>
+<td>Sample Group 03850</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03870</td>
+<td>Sample Group 03870</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03890</td>
+<td>Sample Group 03890</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03910</td>
+<td>Sample Group 03910</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03930</td>
+<td>Sample Group 03930</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03950</td>
+<td>Sample Group 03950</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03970</td>
+<td>Sample Group 03970</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-03990</td>
+<td>Sample Group 03990</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-04010</td>
+<td>Sample Group 04010</td>
+<td>0</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-04030</td>
+<td>Sample Group 04030</td>
+<td>0</td>
+</tr>
+</tbody>
+</table></div>
+
+      </section>
+
+      <section id="small-groups">
+        <h2 data-ja="直接メンバーが1～5名のグループ" data-en="Groups with 1-5 direct members">直接メンバーが1～5名のグループ</h2>
+        <span class="section-count">2499</span>
+        <p data-ja="先頭200件を表示しています。全件は GroupsWithOneToFiveMembers.csv を参照してください。" data-en="Showing the first 200 rows. See GroupsWithOneToFiveMembers.csv for the full dataset.">先頭200件を表示しています。全件は GroupsWithOneToFiveMembers.csv を参照してください。</p>
+        <div class="table-wrap"><table>
+<thead><tr>
+<th data-ja="グループID" data-en="GroupId">グループID</th>
+<th data-ja="グループ名" data-en="GroupName">グループ名</th>
+<th data-ja="直接ユーザー" data-en="DirectUsers">直接ユーザー</th>
+<th data-ja="直接子グループ" data-en="DirectSubGroups">直接子グループ</th>
+<th data-ja="その他メンバー" data-en="DirectOthers">その他メンバー</th>
+<th data-ja="直接メンバー合計" data-en="DirectMembers">直接メンバー合計</th>
+</tr></thead>
+<tbody>
+<tr class="risk-review">
+<td>sample-group-00004</td>
+<td>Sample Group 00004</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00008</td>
+<td>Sample Group 00008</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00012</td>
+<td>Sample Group 00012</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00016</td>
+<td>Sample Group 00016</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00020</td>
+<td>Sample Group 00020</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00024</td>
+<td>Sample Group 00024</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00028</td>
+<td>Sample Group 00028</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00032</td>
+<td>Sample Group 00032</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00036</td>
+<td>Sample Group 00036</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00040</td>
+<td>Sample Group 00040</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00044</td>
+<td>Sample Group 00044</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00048</td>
+<td>Sample Group 00048</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00052</td>
+<td>Sample Group 00052</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00056</td>
+<td>Sample Group 00056</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00060</td>
+<td>Sample Group 00060</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00064</td>
+<td>Sample Group 00064</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00068</td>
+<td>Sample Group 00068</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00072</td>
+<td>Sample Group 00072</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00076</td>
+<td>Sample Group 00076</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00080</td>
+<td>Sample Group 00080</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00084</td>
+<td>Sample Group 00084</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00088</td>
+<td>Sample Group 00088</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00092</td>
+<td>Sample Group 00092</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00096</td>
+<td>Sample Group 00096</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00100</td>
+<td>Sample Group 00100</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00104</td>
+<td>Sample Group 00104</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00108</td>
+<td>Sample Group 00108</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00112</td>
+<td>Sample Group 00112</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00116</td>
+<td>Sample Group 00116</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00120</td>
+<td>Sample Group 00120</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00124</td>
+<td>Sample Group 00124</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00128</td>
+<td>Sample Group 00128</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00132</td>
+<td>Sample Group 00132</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00136</td>
+<td>Sample Group 00136</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00140</td>
+<td>Sample Group 00140</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00144</td>
+<td>Sample Group 00144</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00148</td>
+<td>Sample Group 00148</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00152</td>
+<td>Sample Group 00152</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00156</td>
+<td>Sample Group 00156</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00160</td>
+<td>Sample Group 00160</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00164</td>
+<td>Sample Group 00164</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00168</td>
+<td>Sample Group 00168</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00172</td>
+<td>Sample Group 00172</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00176</td>
+<td>Sample Group 00176</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00180</td>
+<td>Sample Group 00180</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00184</td>
+<td>Sample Group 00184</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00188</td>
+<td>Sample Group 00188</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00192</td>
+<td>Sample Group 00192</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00196</td>
+<td>Sample Group 00196</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00200</td>
+<td>Sample Group 00200</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00204</td>
+<td>Sample Group 00204</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00208</td>
+<td>Sample Group 00208</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00212</td>
+<td>Sample Group 00212</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00216</td>
+<td>Sample Group 00216</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00220</td>
+<td>Sample Group 00220</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00224</td>
+<td>Sample Group 00224</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00228</td>
+<td>Sample Group 00228</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00232</td>
+<td>Sample Group 00232</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00236</td>
+<td>Sample Group 00236</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00240</td>
+<td>Sample Group 00240</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00244</td>
+<td>Sample Group 00244</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00248</td>
+<td>Sample Group 00248</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00252</td>
+<td>Sample Group 00252</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00256</td>
+<td>Sample Group 00256</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00260</td>
+<td>Sample Group 00260</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00264</td>
+<td>Sample Group 00264</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00268</td>
+<td>Sample Group 00268</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00272</td>
+<td>Sample Group 00272</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00276</td>
+<td>Sample Group 00276</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00280</td>
+<td>Sample Group 00280</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00284</td>
+<td>Sample Group 00284</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00288</td>
+<td>Sample Group 00288</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00292</td>
+<td>Sample Group 00292</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00296</td>
+<td>Sample Group 00296</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00300</td>
+<td>Sample Group 00300</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00304</td>
+<td>Sample Group 00304</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00308</td>
+<td>Sample Group 00308</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00312</td>
+<td>Sample Group 00312</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00316</td>
+<td>Sample Group 00316</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00320</td>
+<td>Sample Group 00320</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00324</td>
+<td>Sample Group 00324</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00328</td>
+<td>Sample Group 00328</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00332</td>
+<td>Sample Group 00332</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00336</td>
+<td>Sample Group 00336</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00340</td>
+<td>Sample Group 00340</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00344</td>
+<td>Sample Group 00344</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00348</td>
+<td>Sample Group 00348</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00352</td>
+<td>Sample Group 00352</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00356</td>
+<td>Sample Group 00356</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00360</td>
+<td>Sample Group 00360</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00364</td>
+<td>Sample Group 00364</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00368</td>
+<td>Sample Group 00368</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00372</td>
+<td>Sample Group 00372</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00376</td>
+<td>Sample Group 00376</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00380</td>
+<td>Sample Group 00380</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00384</td>
+<td>Sample Group 00384</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00388</td>
+<td>Sample Group 00388</td>
+<td>4</td>
+<td>0</td>
+<td>1</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00392</td>
+<td>Sample Group 00392</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00396</td>
+<td>Sample Group 00396</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00400</td>
+<td>Sample Group 00400</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00404</td>
+<td>Sample Group 00404</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00408</td>
+<td>Sample Group 00408</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00412</td>
+<td>Sample Group 00412</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00416</td>
+<td>Sample Group 00416</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00420</td>
+<td>Sample Group 00420</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00424</td>
+<td>Sample Group 00424</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00428</td>
+<td>Sample Group 00428</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00432</td>
+<td>Sample Group 00432</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00436</td>
+<td>Sample Group 00436</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00440</td>
+<td>Sample Group 00440</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00444</td>
+<td>Sample Group 00444</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00448</td>
+<td>Sample Group 00448</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00452</td>
+<td>Sample Group 00452</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00456</td>
+<td>Sample Group 00456</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00460</td>
+<td>Sample Group 00460</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00464</td>
+<td>Sample Group 00464</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00468</td>
+<td>Sample Group 00468</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00472</td>
+<td>Sample Group 00472</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00476</td>
+<td>Sample Group 00476</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00480</td>
+<td>Sample Group 00480</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00484</td>
+<td>Sample Group 00484</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00488</td>
+<td>Sample Group 00488</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00492</td>
+<td>Sample Group 00492</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00496</td>
+<td>Sample Group 00496</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00500</td>
+<td>Sample Group 00500</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00504</td>
+<td>Sample Group 00504</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00508</td>
+<td>Sample Group 00508</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00512</td>
+<td>Sample Group 00512</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00516</td>
+<td>Sample Group 00516</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00520</td>
+<td>Sample Group 00520</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00524</td>
+<td>Sample Group 00524</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00528</td>
+<td>Sample Group 00528</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00532</td>
+<td>Sample Group 00532</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00536</td>
+<td>Sample Group 00536</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00540</td>
+<td>Sample Group 00540</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00544</td>
+<td>Sample Group 00544</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00548</td>
+<td>Sample Group 00548</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00552</td>
+<td>Sample Group 00552</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00556</td>
+<td>Sample Group 00556</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00560</td>
+<td>Sample Group 00560</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00564</td>
+<td>Sample Group 00564</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00568</td>
+<td>Sample Group 00568</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00572</td>
+<td>Sample Group 00572</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00576</td>
+<td>Sample Group 00576</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00580</td>
+<td>Sample Group 00580</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00584</td>
+<td>Sample Group 00584</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00588</td>
+<td>Sample Group 00588</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00592</td>
+<td>Sample Group 00592</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00596</td>
+<td>Sample Group 00596</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00600</td>
+<td>Sample Group 00600</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00604</td>
+<td>Sample Group 00604</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00608</td>
+<td>Sample Group 00608</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00612</td>
+<td>Sample Group 00612</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00616</td>
+<td>Sample Group 00616</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00620</td>
+<td>Sample Group 00620</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00624</td>
+<td>Sample Group 00624</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00628</td>
+<td>Sample Group 00628</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00632</td>
+<td>Sample Group 00632</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00636</td>
+<td>Sample Group 00636</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00640</td>
+<td>Sample Group 00640</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00644</td>
+<td>Sample Group 00644</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00648</td>
+<td>Sample Group 00648</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00652</td>
+<td>Sample Group 00652</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00656</td>
+<td>Sample Group 00656</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00660</td>
+<td>Sample Group 00660</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00664</td>
+<td>Sample Group 00664</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00668</td>
+<td>Sample Group 00668</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00672</td>
+<td>Sample Group 00672</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00676</td>
+<td>Sample Group 00676</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00680</td>
+<td>Sample Group 00680</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00684</td>
+<td>Sample Group 00684</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00688</td>
+<td>Sample Group 00688</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00692</td>
+<td>Sample Group 00692</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00696</td>
+<td>Sample Group 00696</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00700</td>
+<td>Sample Group 00700</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00704</td>
+<td>Sample Group 00704</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00708</td>
+<td>Sample Group 00708</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00712</td>
+<td>Sample Group 00712</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00716</td>
+<td>Sample Group 00716</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00720</td>
+<td>Sample Group 00720</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00724</td>
+<td>Sample Group 00724</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00728</td>
+<td>Sample Group 00728</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00732</td>
+<td>Sample Group 00732</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00736</td>
+<td>Sample Group 00736</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00740</td>
+<td>Sample Group 00740</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00744</td>
+<td>Sample Group 00744</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00748</td>
+<td>Sample Group 00748</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00752</td>
+<td>Sample Group 00752</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00756</td>
+<td>Sample Group 00756</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00760</td>
+<td>Sample Group 00760</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00764</td>
+<td>Sample Group 00764</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00768</td>
+<td>Sample Group 00768</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00772</td>
+<td>Sample Group 00772</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00776</td>
+<td>Sample Group 00776</td>
+<td>2</td>
+<td>0</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00780</td>
+<td>Sample Group 00780</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00784</td>
+<td>Sample Group 00784</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00788</td>
+<td>Sample Group 00788</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00792</td>
+<td>Sample Group 00792</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00796</td>
+<td>Sample Group 00796</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="risk-review">
+<td>sample-group-00800</td>
+<td>Sample Group 00800</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+
+      </section>
+
+      <section id="unused-users">
+        <h2 data-ja="未使用ユーザー候補" data-en="Potentially unused users">未使用ユーザー候補</h2>
+        <span class="section-count">3101</span>
+        <p data-ja="先頭200件を表示しています。全件は PotentiallyUnusedUsers.csv を参照してください。" data-en="Showing the first 200 rows. See PotentiallyUnusedUsers.csv for the full dataset.">先頭200件を表示しています。全件は PotentiallyUnusedUsers.csv を参照してください。</p>
+        <div class="table-wrap"><table>
+<thead><tr>
+<th data-ja="ユーザープリンシパル名" data-en="UserPrincipalName">ユーザープリンシパル名</th>
+<th data-ja="表示名" data-en="DisplayName">表示名</th>
+<th data-ja="アカウント有効" data-en="AccountEnabled">アカウント有効</th>
+<th data-ja="最終サインイン" data-en="LastSignInDateTime">最終サインイン</th>
+<th data-ja="検出理由" data-en="Reasons">検出理由</th>
+<th data-ja="所属グループ数" data-en="MemberOfGroupCount">所属グループ数</th>
+</tr></thead>
+<tbody>
+<tr class="risk-warning">
+<td>sample.user00023@example.invalid</td>
+<td>Sample User 00023</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00037@example.invalid</td>
+<td>Sample User 00037</td>
+<td>False</td>
+<td>2026-10-15T03:36:45.5861546+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00074@example.invalid</td>
+<td>Sample User 00074</td>
+<td>False</td>
+<td>2026-09-08T03:36:45.6216098+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00092@example.invalid</td>
+<td>Sample User 00092</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00111@example.invalid</td>
+<td>Sample User 00111</td>
+<td>False</td>
+<td>2026-10-30T03:36:45.6547731+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00115@example.invalid</td>
+<td>Sample User 00115</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00138@example.invalid</td>
+<td>Sample User 00138</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00161@example.invalid</td>
+<td>Sample User 00161</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00204@example.invalid</td>
+<td>Sample User 00204</td>
+<td>True</td>
+<td>2026-06-30T03:36:45.7583610+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00207@example.invalid</td>
+<td>Sample User 00207</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00230@example.invalid</td>
+<td>Sample User 00230</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00238@example.invalid</td>
+<td>Sample User 00238</td>
+<td>True</td>
+<td>2026-05-27T03:36:45.7907202+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00253@example.invalid</td>
+<td>Sample User 00253</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>8</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00255@example.invalid</td>
+<td>Sample User 00255</td>
+<td>True</td>
+<td>2026-05-10T03:36:45.8171923+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00259@example.invalid</td>
+<td>Sample User 00259</td>
+<td>False</td>
+<td>2026-09-01T03:36:45.8221248+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00272@example.invalid</td>
+<td>Sample User 00272</td>
+<td>True</td>
+<td>2026-04-23T03:36:45.8423770+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00276@example.invalid</td>
+<td>Sample User 00276</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00296@example.invalid</td>
+<td>Sample User 00296</td>
+<td>False</td>
+<td>2026-10-23T03:36:45.8566054+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00299@example.invalid</td>
+<td>Sample User 00299</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00306@example.invalid</td>
+<td>Sample User 00306</td>
+<td>True</td>
+<td>2026-03-20T03:36:45.8639954+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00322@example.invalid</td>
+<td>Sample User 00322</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00323@example.invalid</td>
+<td>Sample User 00323</td>
+<td>True</td>
+<td>2026-03-03T03:36:45.8821908+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00333@example.invalid</td>
+<td>Sample User 00333</td>
+<td>False</td>
+<td>2026-09-16T03:36:45.9006442+09:00</td>
+<td>AccountDisabled</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00340@example.invalid</td>
+<td>Sample User 00340</td>
+<td>True</td>
+<td>2026-02-14T03:36:45.9134232+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00345@example.invalid</td>
+<td>Sample User 00345</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00414@example.invalid</td>
+<td>Sample User 00414</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00437@example.invalid</td>
+<td>Sample User 00437</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00444@example.invalid</td>
+<td>Sample User 00444</td>
+<td>False</td>
+<td>2026-08-25T03:36:46.0031751+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00481@example.invalid</td>
+<td>Sample User 00481</td>
+<td>False</td>
+<td>2026-10-16T03:36:46.0424013+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00506@example.invalid</td>
+<td>Sample User 00506</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00529@example.invalid</td>
+<td>Sample User 00529</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00544@example.invalid</td>
+<td>Sample User 00544</td>
+<td>True</td>
+<td>2026-07-20T03:36:46.0907881+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00575@example.invalid</td>
+<td>Sample User 00575</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00578@example.invalid</td>
+<td>Sample User 00578</td>
+<td>True</td>
+<td>2026-06-16T03:36:46.1224483+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00592@example.invalid</td>
+<td>Sample User 00592</td>
+<td>False</td>
+<td>2026-09-24T03:36:46.1450923+09:00</td>
+<td>AccountDisabled</td>
+<td>8</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00595@example.invalid</td>
+<td>Sample User 00595</td>
+<td>True</td>
+<td>2026-05-30T03:36:46.1466323+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00598@example.invalid</td>
+<td>Sample User 00598</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00612@example.invalid</td>
+<td>Sample User 00612</td>
+<td>True</td>
+<td>2026-05-13T03:36:46.1755020+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00644@example.invalid</td>
+<td>Sample User 00644</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00646@example.invalid</td>
+<td>Sample User 00646</td>
+<td>True</td>
+<td>2026-04-09T03:36:46.1965492+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00663@example.invalid</td>
+<td>Sample User 00663</td>
+<td>True</td>
+<td>2026-03-23T03:36:46.2253879+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00666@example.invalid</td>
+<td>Sample User 00666</td>
+<td>False</td>
+<td>2026-10-09T03:36:46.2253879+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00667@example.invalid</td>
+<td>Sample User 00667</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00680@example.invalid</td>
+<td>Sample User 00680</td>
+<td>True</td>
+<td>2026-03-06T03:36:46.2548826+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00703@example.invalid</td>
+<td>Sample User 00703</td>
+<td>False</td>
+<td>2026-09-02T03:36:46.2800415+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00736@example.invalid</td>
+<td>Sample User 00736</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00740@example.invalid</td>
+<td>Sample User 00740</td>
+<td>False</td>
+<td>2026-10-24T03:36:46.3057718+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00777@example.invalid</td>
+<td>Sample User 00777</td>
+<td>False</td>
+<td>2026-09-17T03:36:46.3235654+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00805@example.invalid</td>
+<td>Sample User 00805</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00874@example.invalid</td>
+<td>Sample User 00874</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00884@example.invalid</td>
+<td>Sample User 00884</td>
+<td>True</td>
+<td>2026-02-10T03:36:46.4215380+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00888@example.invalid</td>
+<td>Sample User 00888</td>
+<td>False</td>
+<td>2026-08-26T03:36:46.4295571+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00918@example.invalid</td>
+<td>Sample User 00918</td>
+<td>True</td>
+<td>2026-07-06T03:36:46.4437024+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00920@example.invalid</td>
+<td>Sample User 00920</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00925@example.invalid</td>
+<td>Sample User 00925</td>
+<td>False</td>
+<td>2026-10-17T03:36:46.4516824+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00935@example.invalid</td>
+<td>Sample User 00935</td>
+<td>True</td>
+<td>2026-06-19T03:36:46.4631429+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00943@example.invalid</td>
+<td>Sample User 00943</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00952@example.invalid</td>
+<td>Sample User 00952</td>
+<td>True</td>
+<td>2026-06-02T03:36:46.4893235+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00986@example.invalid</td>
+<td>Sample User 00986</td>
+<td>True</td>
+<td>2026-04-29T03:36:46.5359480+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user00989@example.invalid</td>
+<td>Sample User 00989</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user00999@example.invalid</td>
+<td>Sample User 00999</td>
+<td>False</td>
+<td>2026-11-01T03:36:46.5553049+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01003@example.invalid</td>
+<td>Sample User 01003</td>
+<td>True</td>
+<td>2026-04-12T03:36:46.5653046+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01012@example.invalid</td>
+<td>Sample User 01012</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>2</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01020@example.invalid</td>
+<td>Sample User 01020</td>
+<td>True</td>
+<td>2026-03-26T03:36:46.5756715+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01058@example.invalid</td>
+<td>Sample User 01058</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01073@example.invalid</td>
+<td>Sample User 01073</td>
+<td>False</td>
+<td>2026-11-16T03:36:46.6316661+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01081@example.invalid</td>
+<td>Sample User 01081</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01110@example.invalid</td>
+<td>Sample User 01110</td>
+<td>False</td>
+<td>2026-10-10T03:36:46.6601458+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01127@example.invalid</td>
+<td>Sample User 01127</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01147@example.invalid</td>
+<td>Sample User 01147</td>
+<td>False</td>
+<td>2026-09-03T03:36:46.7012868+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01150@example.invalid</td>
+<td>Sample User 01150</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01184@example.invalid</td>
+<td>Sample User 01184</td>
+<td>False</td>
+<td>2026-10-25T03:36:46.7318226+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01219@example.invalid</td>
+<td>Sample User 01219</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01221@example.invalid</td>
+<td>Sample User 01221</td>
+<td>False</td>
+<td>2026-09-18T03:36:46.7619143+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01224@example.invalid</td>
+<td>Sample User 01224</td>
+<td>True</td>
+<td>2026-03-02T03:36:46.7639218+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01258@example.invalid</td>
+<td>Sample User 01258</td>
+<td>False</td>
+<td>2026-01-27T03:36:46.7962929+09:00</td>
+<td>AccountDisabled; NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01265@example.invalid</td>
+<td>Sample User 01265</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01275@example.invalid</td>
+<td>Sample User 01275</td>
+<td>True</td>
+<td>2026-07-09T03:36:46.8239699+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01288@example.invalid</td>
+<td>Sample User 01288</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01292@example.invalid</td>
+<td>Sample User 01292</td>
+<td>True</td>
+<td>2026-06-22T03:36:46.8497307+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01295@example.invalid</td>
+<td>Sample User 01295</td>
+<td>False</td>
+<td>2026-10-03T03:36:46.8497307+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01311@example.invalid</td>
+<td>Sample User 01311</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01326@example.invalid</td>
+<td>Sample User 01326</td>
+<td>True</td>
+<td>2026-05-19T03:36:46.8760082+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01332@example.invalid</td>
+<td>Sample User 01332</td>
+<td>False</td>
+<td>2026-08-27T03:36:46.8925093+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01334@example.invalid</td>
+<td>Sample User 01334</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01343@example.invalid</td>
+<td>Sample User 01343</td>
+<td>True</td>
+<td>2026-05-02T03:36:46.9087435+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01357@example.invalid</td>
+<td>Sample User 01357</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01360@example.invalid</td>
+<td>Sample User 01360</td>
+<td>True</td>
+<td>2026-04-15T03:36:46.9325995+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01369@example.invalid</td>
+<td>Sample User 01369</td>
+<td>False</td>
+<td>2026-10-18T03:36:46.9439612+09:00</td>
+<td>AccountDisabled</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01380@example.invalid</td>
+<td>Sample User 01380</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01403@example.invalid</td>
+<td>Sample User 01403</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01449@example.invalid</td>
+<td>Sample User 01449</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01472@example.invalid</td>
+<td>Sample User 01472</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01517@example.invalid</td>
+<td>Sample User 01517</td>
+<td>False</td>
+<td>2026-11-17T03:36:47.0733845+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01518@example.invalid</td>
+<td>Sample User 01518</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01554@example.invalid</td>
+<td>Sample User 01554</td>
+<td>False</td>
+<td>2026-10-11T03:36:47.0978390+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01564@example.invalid</td>
+<td>Sample User 01564</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01587@example.invalid</td>
+<td>Sample User 01587</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01591@example.invalid</td>
+<td>Sample User 01591</td>
+<td>False</td>
+<td>2026-09-04T03:36:47.1265236+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01598@example.invalid</td>
+<td>Sample User 01598</td>
+<td>True</td>
+<td>2026-02-16T03:36:47.1422429+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01610@example.invalid</td>
+<td>Sample User 01610</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01615@example.invalid</td>
+<td>Sample User 01615</td>
+<td>True</td>
+<td>2026-01-30T03:36:47.1689396+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01628@example.invalid</td>
+<td>Sample User 01628</td>
+<td>False</td>
+<td>2026-10-26T03:36:47.1924799+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01632@example.invalid</td>
+<td>Sample User 01632</td>
+<td>True</td>
+<td>2026-07-12T03:36:47.1924799+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01633@example.invalid</td>
+<td>Sample User 01633</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01656@example.invalid</td>
+<td>Sample User 01656</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01665@example.invalid</td>
+<td>Sample User 01665</td>
+<td>False</td>
+<td>2026-09-19T03:36:47.2079985+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01666@example.invalid</td>
+<td>Sample User 01666</td>
+<td>True</td>
+<td>2026-06-08T03:36:47.2079985+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01679@example.invalid</td>
+<td>Sample User 01679</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01683@example.invalid</td>
+<td>Sample User 01683</td>
+<td>True</td>
+<td>2026-05-22T03:36:47.2477676+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01700@example.invalid</td>
+<td>Sample User 01700</td>
+<td>True</td>
+<td>2026-05-05T03:36:47.2708527+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01702@example.invalid</td>
+<td>Sample User 01702</td>
+<td>False</td>
+<td></td>
+<td>AccountDisabled; NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01725@example.invalid</td>
+<td>Sample User 01725</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01739@example.invalid</td>
+<td>Sample User 01739</td>
+<td>False</td>
+<td>2026-10-04T03:36:47.3086916+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01771@example.invalid</td>
+<td>Sample User 01771</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01794@example.invalid</td>
+<td>Sample User 01794</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01813@example.invalid</td>
+<td>Sample User 01813</td>
+<td>False</td>
+<td>2026-10-19T03:36:47.3773961+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01840@example.invalid</td>
+<td>Sample User 01840</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01863@example.invalid</td>
+<td>Sample User 01863</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01904@example.invalid</td>
+<td>Sample User 01904</td>
+<td>True</td>
+<td>2026-04-11T03:36:47.4427543+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01924@example.invalid</td>
+<td>Sample User 01924</td>
+<td>False</td>
+<td>2026-09-27T03:36:47.4524515+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01932@example.invalid</td>
+<td>Sample User 01932</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01938@example.invalid</td>
+<td>Sample User 01938</td>
+<td>True</td>
+<td>2026-03-08T03:36:47.4795968+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01955@example.invalid</td>
+<td>Sample User 01955</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01961@example.invalid</td>
+<td>Sample User 01961</td>
+<td>False</td>
+<td>2026-11-18T03:36:47.5163251+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user01972@example.invalid</td>
+<td>Sample User 01972</td>
+<td>True</td>
+<td>2026-02-02T03:36:47.5293783+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user01998@example.invalid</td>
+<td>Sample User 01998</td>
+<td>False</td>
+<td>2026-10-12T03:36:47.5383873+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02001@example.invalid</td>
+<td>Sample User 02001</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02006@example.invalid</td>
+<td>Sample User 02006</td>
+<td>True</td>
+<td>2026-06-28T03:36:47.5455901+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02023@example.invalid</td>
+<td>Sample User 02023</td>
+<td>True</td>
+<td>2026-06-11T03:36:47.5594704+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02024@example.invalid</td>
+<td>Sample User 02024</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02035@example.invalid</td>
+<td>Sample User 02035</td>
+<td>False</td>
+<td>2026-09-05T03:36:47.5765045+09:00</td>
+<td>AccountDisabled</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02040@example.invalid</td>
+<td>Sample User 02040</td>
+<td>True</td>
+<td>2026-05-25T03:36:47.5817732+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02047@example.invalid</td>
+<td>Sample User 02047</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02093@example.invalid</td>
+<td>Sample User 02093</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02146@example.invalid</td>
+<td>Sample User 02146</td>
+<td>False</td>
+<td>2026-11-11T03:36:47.6526122+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02162@example.invalid</td>
+<td>Sample User 02162</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02208@example.invalid</td>
+<td>Sample User 02208</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02231@example.invalid</td>
+<td>Sample User 02231</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02244@example.invalid</td>
+<td>Sample User 02244</td>
+<td>True</td>
+<td>2026-05-01T03:36:47.7254284+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02277@example.invalid</td>
+<td>Sample User 02277</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02278@example.invalid</td>
+<td>Sample User 02278</td>
+<td>True</td>
+<td>2026-03-28T03:36:47.7436565+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02294@example.invalid</td>
+<td>Sample User 02294</td>
+<td>False</td>
+<td>2026-09-13T03:36:47.7607602+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02295@example.invalid</td>
+<td>Sample User 02295</td>
+<td>True</td>
+<td>2026-03-11T03:36:47.7607602+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02300@example.invalid</td>
+<td>Sample User 02300</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02312@example.invalid</td>
+<td>Sample User 02312</td>
+<td>True</td>
+<td>2026-02-22T03:36:47.7842685+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02331@example.invalid</td>
+<td>Sample User 02331</td>
+<td>False</td>
+<td>2026-11-04T03:36:47.7976717+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02346@example.invalid</td>
+<td>Sample User 02346</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02363@example.invalid</td>
+<td>Sample User 02363</td>
+<td>True</td>
+<td>2026-07-01T03:36:47.8401818+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02368@example.invalid</td>
+<td>Sample User 02368</td>
+<td>False</td>
+<td>2026-09-28T03:36:47.8446959+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02369@example.invalid</td>
+<td>Sample User 02369</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02380@example.invalid</td>
+<td>Sample User 02380</td>
+<td>True</td>
+<td>2026-06-14T03:36:47.8626596+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02405@example.invalid</td>
+<td>Sample User 02405</td>
+<td>False</td>
+<td>2026-11-19T03:36:47.8930551+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02438@example.invalid</td>
+<td>Sample User 02438</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02484@example.invalid</td>
+<td>Sample User 02484</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02507@example.invalid</td>
+<td>Sample User 02507</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02576@example.invalid</td>
+<td>Sample User 02576</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02584@example.invalid</td>
+<td>Sample User 02584</td>
+<td>True</td>
+<td>2026-05-21T03:36:48.0448511+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02618@example.invalid</td>
+<td>Sample User 02618</td>
+<td>True</td>
+<td>2026-04-17T03:36:48.0765544+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02622@example.invalid</td>
+<td>Sample User 02622</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02627@example.invalid</td>
+<td>Sample User 02627</td>
+<td>False</td>
+<td>2026-10-06T03:36:48.0825545+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02635@example.invalid</td>
+<td>Sample User 02635</td>
+<td>True</td>
+<td>2026-03-31T03:36:48.0976932+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02645@example.invalid</td>
+<td>Sample User 02645</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02652@example.invalid</td>
+<td>Sample User 02652</td>
+<td>True</td>
+<td>2026-03-14T03:36:48.1083801+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02686@example.invalid</td>
+<td>Sample User 02686</td>
+<td>True</td>
+<td>2026-02-08T03:36:48.1537414+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02691@example.invalid</td>
+<td>Sample User 02691</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02701@example.invalid</td>
+<td>Sample User 02701</td>
+<td>False</td>
+<td>2026-10-21T03:36:48.1765699+09:00</td>
+<td>AccountDisabled</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02703@example.invalid</td>
+<td>Sample User 02703</td>
+<td>True</td>
+<td>2026-07-21T03:36:48.1765699+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02714@example.invalid</td>
+<td>Sample User 02714</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02720@example.invalid</td>
+<td>Sample User 02720</td>
+<td>True</td>
+<td>2026-07-04T03:36:48.2050303+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02760@example.invalid</td>
+<td>Sample User 02760</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02775@example.invalid</td>
+<td>Sample User 02775</td>
+<td>False</td>
+<td>2026-11-05T03:36:48.2448859+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02812@example.invalid</td>
+<td>Sample User 02812</td>
+<td>False</td>
+<td>2026-09-29T03:36:48.2740446+09:00</td>
+<td>AccountDisabled</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02829@example.invalid</td>
+<td>Sample User 02829</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02849@example.invalid</td>
+<td>Sample User 02849</td>
+<td>False</td>
+<td>2026-11-20T03:36:48.3141051+09:00</td>
+<td>AccountDisabled</td>
+<td>8</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02852@example.invalid</td>
+<td>Sample User 02852</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02875@example.invalid</td>
+<td>Sample User 02875</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>3</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02886@example.invalid</td>
+<td>Sample User 02886</td>
+<td>False</td>
+<td>2026-10-14T03:36:48.3419907+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02921@example.invalid</td>
+<td>Sample User 02921</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02923@example.invalid</td>
+<td>Sample User 02923</td>
+<td>False</td>
+<td>2026-09-07T03:36:48.3689142+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02924@example.invalid</td>
+<td>Sample User 02924</td>
+<td>True</td>
+<td>2026-06-10T03:36:48.3706554+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02944@example.invalid</td>
+<td>Sample User 02944</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02958@example.invalid</td>
+<td>Sample User 02958</td>
+<td>True</td>
+<td>2026-05-07T03:36:48.4108010+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02960@example.invalid</td>
+<td>Sample User 02960</td>
+<td>False</td>
+<td>2026-10-29T03:36:48.4117964+09:00</td>
+<td>AccountDisabled</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02967@example.invalid</td>
+<td>Sample User 02967</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02975@example.invalid</td>
+<td>Sample User 02975</td>
+<td>True</td>
+<td>2026-04-20T03:36:48.4246530+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02990@example.invalid</td>
+<td>Sample User 02990</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user02992@example.invalid</td>
+<td>Sample User 02992</td>
+<td>True</td>
+<td>2026-04-03T03:36:48.4449706+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>7</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user02997@example.invalid</td>
+<td>Sample User 02997</td>
+<td>False</td>
+<td>2026-09-22T03:36:48.4449706+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03013@example.invalid</td>
+<td>Sample User 03013</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03026@example.invalid</td>
+<td>Sample User 03026</td>
+<td>True</td>
+<td>2026-02-28T03:36:48.4757999+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user03034@example.invalid</td>
+<td>Sample User 03034</td>
+<td>False</td>
+<td>2026-11-13T03:36:48.4946118+09:00</td>
+<td>AccountDisabled</td>
+<td>3</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03036@example.invalid</td>
+<td>Sample User 03036</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03043@example.invalid</td>
+<td>Sample User 03043</td>
+<td>True</td>
+<td>2026-02-11T03:36:48.5050165+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>6</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03059@example.invalid</td>
+<td>Sample User 03059</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03060@example.invalid</td>
+<td>Sample User 03060</td>
+<td>True</td>
+<td>2026-07-24T03:36:48.5341495+09:00</td>
+<td>NoRecentSignIn(&gt;90d)</td>
+<td>5</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03082@example.invalid</td>
+<td>Sample User 03082</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03151@example.invalid</td>
+<td>Sample User 03151</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>7</td>
+</tr>
+<tr class="risk-warning">
+<td>sample.user03174@example.invalid</td>
+<td>Sample User 03174</td>
+<td>True</td>
+<td></td>
+<td>NoSignInRecord</td>
+<td>4</td>
+</tr>
+<tr class="risk-critical">
+<td>sample.user03182@example.invalid</td>
+<td>Sample User 03182</td>
+<td>False</td>
+<td>2026-09-15T03:36:48.6363123+09:00</td>
+<td>AccountDisabled</td>
+<td>5</td>
+</tr>
+</tbody>
+</table></div>
+
+      </section>
+
+      <section id="cycle-map">
+        <h2 data-ja="循環依存 Mermaid 図" data-en="Circular dependency Mermaid map">循環依存 Mermaid 図</h2>
+        <div class="mermaid">
+flowchart TD
+    classDef cycle fill:#ffe5e5,stroke:#d60000,stroke-width:2px;
+    sample_group_00001["Sample Group 00001
+sample-group-00001"] --> sample_group_00002["Sample Group 00002
+sample-group-00002"]
+    sample_group_00002["Sample Group 00002
+sample-group-00002"] --> sample_group_00003["Sample Group 00003
+sample-group-00003"]
+    sample_group_00003["Sample Group 00003
+sample-group-00003"] --> sample_group_00001["Sample Group 00001
+sample-group-00001"]
+    sample_group_00101["Sample Group 00101
+sample-group-00101"] --> sample_group_00102["Sample Group 00102
+sample-group-00102"]
+    sample_group_00102["Sample Group 00102
+sample-group-00102"] --> sample_group_00103["Sample Group 00103
+sample-group-00103"]
+    sample_group_00103["Sample Group 00103
+sample-group-00103"] --> sample_group_00101["Sample Group 00101
+sample-group-00101"]
+    class sample_group_00003,sample_group_00002,sample_group_00001,sample_group_00103,sample_group_00102,sample_group_00101 cycle;
+        </div>
+      </section>
+
+      <section id="dependency-map">
+        <h2 data-ja="グループ依存関係 Mermaid 図" data-en="Group dependency Mermaid map">グループ依存関係 Mermaid 図</h2>
+        <p class="muted" data-ja="大規模テナントでは -DependencyMermaidMaxEdges の指定値で図を省略する場合があります。" data-en="For large tenants, the graph may be truncated according to -DependencyMermaidMaxEdges.">大規模テナントでは -DependencyMermaidMaxEdges の指定値で図を省略する場合があります。</p>
+        <div class="mermaid">
+flowchart TD
+    sample_group_00001["Sample Group 00001
+sample-group-00001"] --> sample_group_00002["Sample Group 00002
+sample-group-00002"]
+    sample_group_00002["Sample Group 00002
+sample-group-00002"] --> sample_group_00003["Sample Group 00003
+sample-group-00003"]
+    sample_group_00003["Sample Group 00003
+sample-group-00003"] --> sample_group_00001["Sample Group 00001
+sample-group-00001"]
+    sample_group_00020["Sample Group 00020
+sample-group-00020"] --> sample_group_00021["Sample Group 00021
+sample-group-00021"]
+    sample_group_00040["Sample Group 00040
+sample-group-00040"] --> sample_group_00041["Sample Group 00041
+sample-group-00041"]
+    sample_group_00060["Sample Group 00060
+sample-group-00060"] --> sample_group_00061["Sample Group 00061
+sample-group-00061"]
+    sample_group_00080["Sample Group 00080
+sample-group-00080"] --> sample_group_00081["Sample Group 00081
+sample-group-00081"]
+    sample_group_00100["Sample Group 00100
+sample-group-00100"] --> sample_group_00101["Sample Group 00101
+sample-group-00101"]
+    sample_group_00101["Sample Group 00101
+sample-group-00101"] --> sample_group_00102["Sample Group 00102
+sample-group-00102"]
+    sample_group_00102["Sample Group 00102
+sample-group-00102"] --> sample_group_00103["Sample Group 00103
+sample-group-00103"]
+    sample_group_00103["Sample Group 00103
+sample-group-00103"] --> sample_group_00101["Sample Group 00101
+sample-group-00101"]
+    sample_group_00120["Sample Group 00120
+sample-group-00120"] --> sample_group_00121["Sample Group 00121
+sample-group-00121"]
+    sample_group_00140["Sample Group 00140
+sample-group-00140"] --> sample_group_00141["Sample Group 00141
+sample-group-00141"]
+    sample_group_00160["Sample Group 00160
+sample-group-00160"] --> sample_group_00161["Sample Group 00161
+sample-group-00161"]
+    sample_group_00180["Sample Group 00180
+sample-group-00180"] --> sample_group_00181["Sample Group 00181
+sample-group-00181"]
+    sample_group_00200["Sample Group 00200
+sample-group-00200"] --> sample_group_00201["Sample Group 00201
+sample-group-00201"]
+    sample_group_00220["Sample Group 00220
+sample-group-00220"] --> sample_group_00221["Sample Group 00221
+sample-group-00221"]
+    sample_group_00240["Sample Group 00240
+sample-group-00240"] --> sample_group_00241["Sample Group 00241
+sample-group-00241"]
+    sample_group_00260["Sample Group 00260
+sample-group-00260"] --> sample_group_00261["Sample Group 00261
+sample-group-00261"]
+    sample_group_00280["Sample Group 00280
+sample-group-00280"] --> sample_group_00281["Sample Group 00281
+sample-group-00281"]
+    sample_group_00300["Sample Group 00300
+sample-group-00300"] --> sample_group_00301["Sample Group 00301
+sample-group-00301"]
+    sample_group_00320["Sample Group 00320
+sample-group-00320"] --> sample_group_00321["Sample Group 00321
+sample-group-00321"]
+    sample_group_00340["Sample Group 00340
+sample-group-00340"] --> sample_group_00341["Sample Group 00341
+sample-group-00341"]
+    sample_group_00360["Sample Group 00360
+sample-group-00360"] --> sample_group_00361["Sample Group 00361
+sample-group-00361"]
+    sample_group_00380["Sample Group 00380
+sample-group-00380"] --> sample_group_00381["Sample Group 00381
+sample-group-00381"]
+    sample_group_00400["Sample Group 00400
+sample-group-00400"] --> sample_group_00401["Sample Group 00401
+sample-group-00401"]
+    sample_group_00420["Sample Group 00420
+sample-group-00420"] --> sample_group_00421["Sample Group 00421
+sample-group-00421"]
+    sample_group_00440["Sample Group 00440
+sample-group-00440"] --> sample_group_00441["Sample Group 00441
+sample-group-00441"]
+    sample_group_00460["Sample Group 00460
+sample-group-00460"] --> sample_group_00461["Sample Group 00461
+sample-group-00461"]
+    sample_group_00480["Sample Group 00480
+sample-group-00480"] --> sample_group_00481["Sample Group 00481
+sample-group-00481"]
+    sample_group_00500["Sample Group 00500
+sample-group-00500"] --> sample_group_00501["Sample Group 00501
+sample-group-00501"]
+    sample_group_00520["Sample Group 00520
+sample-group-00520"] --> sample_group_00521["Sample Group 00521
+sample-group-00521"]
+    sample_group_00540["Sample Group 00540
+sample-group-00540"] --> sample_group_00541["Sample Group 00541
+sample-group-00541"]
+    sample_group_00560["Sample Group 00560
+sample-group-00560"] --> sample_group_00561["Sample Group 00561
+sample-group-00561"]
+    sample_group_00580["Sample Group 00580
+sample-group-00580"] --> sample_group_00581["Sample Group 00581
+sample-group-00581"]
+    sample_group_00600["Sample Group 00600
+sample-group-00600"] --> sample_group_00601["Sample Group 00601
+sample-group-00601"]
+    sample_group_00620["Sample Group 00620
+sample-group-00620"] --> sample_group_00621["Sample Group 00621
+sample-group-00621"]
+    sample_group_00640["Sample Group 00640
+sample-group-00640"] --> sample_group_00641["Sample Group 00641
+sample-group-00641"]
+    sample_group_00660["Sample Group 00660
+sample-group-00660"] --> sample_group_00661["Sample Group 00661
+sample-group-00661"]
+    sample_group_00680["Sample Group 00680
+sample-group-00680"] --> sample_group_00681["Sample Group 00681
+sample-group-00681"]
+    sample_group_00700["Sample Group 00700
+sample-group-00700"] --> sample_group_00701["Sample Group 00701
+sample-group-00701"]
+    sample_group_00720["Sample Group 00720
+sample-group-00720"] --> sample_group_00721["Sample Group 00721
+sample-group-00721"]
+    sample_group_00740["Sample Group 00740
+sample-group-00740"] --> sample_group_00741["Sample Group 00741
+sample-group-00741"]
+    sample_group_00760["Sample Group 00760
+sample-group-00760"] --> sample_group_00761["Sample Group 00761
+sample-group-00761"]
+    sample_group_00780["Sample Group 00780
+sample-group-00780"] --> sample_group_00781["Sample Group 00781
+sample-group-00781"]
+    sample_group_00800["Sample Group 00800
+sample-group-00800"] --> sample_group_00801["Sample Group 00801
+sample-group-00801"]
+    sample_group_00820["Sample Group 00820
+sample-group-00820"] --> sample_group_00821["Sample Group 00821
+sample-group-00821"]
+    sample_group_00840["Sample Group 00840
+sample-group-00840"] --> sample_group_00841["Sample Group 00841
+sample-group-00841"]
+    sample_group_00860["Sample Group 00860
+sample-group-00860"] --> sample_group_00861["Sample Group 00861
+sample-group-00861"]
+    sample_group_00880["Sample Group 00880
+sample-group-00880"] --> sample_group_00881["Sample Group 00881
+sample-group-00881"]
+    sample_group_00900["Sample Group 00900
+sample-group-00900"] --> sample_group_00901["Sample Group 00901
+sample-group-00901"]
+    sample_group_00920["Sample Group 00920
+sample-group-00920"] --> sample_group_00921["Sample Group 00921
+sample-group-00921"]
+    sample_group_00940["Sample Group 00940
+sample-group-00940"] --> sample_group_00941["Sample Group 00941
+sample-group-00941"]
+    sample_group_00960["Sample Group 00960
+sample-group-00960"] --> sample_group_00961["Sample Group 00961
+sample-group-00961"]
+    sample_group_00980["Sample Group 00980
+sample-group-00980"] --> sample_group_00981["Sample Group 00981
+sample-group-00981"]
+    sample_group_01000["Sample Group 01000
+sample-group-01000"] --> sample_group_01001["Sample Group 01001
+sample-group-01001"]
+    sample_group_01020["Sample Group 01020
+sample-group-01020"] --> sample_group_01021["Sample Group 01021
+sample-group-01021"]
+    sample_group_01040["Sample Group 01040
+sample-group-01040"] --> sample_group_01041["Sample Group 01041
+sample-group-01041"]
+    sample_group_01060["Sample Group 01060
+sample-group-01060"] --> sample_group_01061["Sample Group 01061
+sample-group-01061"]
+    sample_group_01080["Sample Group 01080
+sample-group-01080"] --> sample_group_01081["Sample Group 01081
+sample-group-01081"]
+    sample_group_01100["Sample Group 01100
+sample-group-01100"] --> sample_group_01101["Sample Group 01101
+sample-group-01101"]
+    sample_group_01120["Sample Group 01120
+sample-group-01120"] --> sample_group_01121["Sample Group 01121
+sample-group-01121"]
+    sample_group_01140["Sample Group 01140
+sample-group-01140"] --> sample_group_01141["Sample Group 01141
+sample-group-01141"]
+    sample_group_01160["Sample Group 01160
+sample-group-01160"] --> sample_group_01161["Sample Group 01161
+sample-group-01161"]
+    sample_group_01180["Sample Group 01180
+sample-group-01180"] --> sample_group_01181["Sample Group 01181
+sample-group-01181"]
+    sample_group_01200["Sample Group 01200
+sample-group-01200"] --> sample_group_01201["Sample Group 01201
+sample-group-01201"]
+    sample_group_01220["Sample Group 01220
+sample-group-01220"] --> sample_group_01221["Sample Group 01221
+sample-group-01221"]
+    sample_group_01240["Sample Group 01240
+sample-group-01240"] --> sample_group_01241["Sample Group 01241
+sample-group-01241"]
+    sample_group_01260["Sample Group 01260
+sample-group-01260"] --> sample_group_01261["Sample Group 01261
+sample-group-01261"]
+    sample_group_01280["Sample Group 01280
+sample-group-01280"] --> sample_group_01281["Sample Group 01281
+sample-group-01281"]
+    sample_group_01300["Sample Group 01300
+sample-group-01300"] --> sample_group_01301["Sample Group 01301
+sample-group-01301"]
+    sample_group_01320["Sample Group 01320
+sample-group-01320"] --> sample_group_01321["Sample Group 01321
+sample-group-01321"]
+    sample_group_01340["Sample Group 01340
+sample-group-01340"] --> sample_group_01341["Sample Group 01341
+sample-group-01341"]
+    sample_group_01360["Sample Group 01360
+sample-group-01360"] --> sample_group_01361["Sample Group 01361
+sample-group-01361"]
+    sample_group_01380["Sample Group 01380
+sample-group-01380"] --> sample_group_01381["Sample Group 01381
+sample-group-01381"]
+    sample_group_01400["Sample Group 01400
+sample-group-01400"] --> sample_group_01401["Sample Group 01401
+sample-group-01401"]
+    sample_group_01420["Sample Group 01420
+sample-group-01420"] --> sample_group_01421["Sample Group 01421
+sample-group-01421"]
+    sample_group_01440["Sample Group 01440
+sample-group-01440"] --> sample_group_01441["Sample Group 01441
+sample-group-01441"]
+    sample_group_01460["Sample Group 01460
+sample-group-01460"] --> sample_group_01461["Sample Group 01461
+sample-group-01461"]
+    sample_group_01480["Sample Group 01480
+sample-group-01480"] --> sample_group_01481["Sample Group 01481
+sample-group-01481"]
+    sample_group_01500["Sample Group 01500
+sample-group-01500"] --> sample_group_01501["Sample Group 01501
+sample-group-01501"]
+    sample_group_01520["Sample Group 01520
+sample-group-01520"] --> sample_group_01521["Sample Group 01521
+sample-group-01521"]
+    sample_group_01540["Sample Group 01540
+sample-group-01540"] --> sample_group_01541["Sample Group 01541
+sample-group-01541"]
+    sample_group_01560["Sample Group 01560
+sample-group-01560"] --> sample_group_01561["Sample Group 01561
+sample-group-01561"]
+    sample_group_01580["Sample Group 01580
+sample-group-01580"] --> sample_group_01581["Sample Group 01581
+sample-group-01581"]
+    sample_group_01600["Sample Group 01600
+sample-group-01600"] --> sample_group_01601["Sample Group 01601
+sample-group-01601"]
+    sample_group_01620["Sample Group 01620
+sample-group-01620"] --> sample_group_01621["Sample Group 01621
+sample-group-01621"]
+    sample_group_01640["Sample Group 01640
+sample-group-01640"] --> sample_group_01641["Sample Group 01641
+sample-group-01641"]
+    sample_group_01660["Sample Group 01660
+sample-group-01660"] --> sample_group_01661["Sample Group 01661
+sample-group-01661"]
+    sample_group_01680["Sample Group 01680
+sample-group-01680"] --> sample_group_01681["Sample Group 01681
+sample-group-01681"]
+    sample_group_01700["Sample Group 01700
+sample-group-01700"] --> sample_group_01701["Sample Group 01701
+sample-group-01701"]
+    sample_group_01720["Sample Group 01720
+sample-group-01720"] --> sample_group_01721["Sample Group 01721
+sample-group-01721"]
+    sample_group_01740["Sample Group 01740
+sample-group-01740"] --> sample_group_01741["Sample Group 01741
+sample-group-01741"]
+    sample_group_01760["Sample Group 01760
+sample-group-01760"] --> sample_group_01761["Sample Group 01761
+sample-group-01761"]
+    sample_group_01780["Sample Group 01780
+sample-group-01780"] --> sample_group_01781["Sample Group 01781
+sample-group-01781"]
+    sample_group_01800["Sample Group 01800
+sample-group-01800"] --> sample_group_01801["Sample Group 01801
+sample-group-01801"]
+    sample_group_01820["Sample Group 01820
+sample-group-01820"] --> sample_group_01821["Sample Group 01821
+sample-group-01821"]
+    sample_group_01840["Sample Group 01840
+sample-group-01840"] --> sample_group_01841["Sample Group 01841
+sample-group-01841"]
+    sample_group_01860["Sample Group 01860
+sample-group-01860"] --> sample_group_01861["Sample Group 01861
+sample-group-01861"]
+    sample_group_01880["Sample Group 01880
+sample-group-01880"] --> sample_group_01881["Sample Group 01881
+sample-group-01881"]
+    sample_group_01900["Sample Group 01900
+sample-group-01900"] --> sample_group_01901["Sample Group 01901
+sample-group-01901"]
+    sample_group_01920["Sample Group 01920
+sample-group-01920"] --> sample_group_01921["Sample Group 01921
+sample-group-01921"]
+    sample_group_01940["Sample Group 01940
+sample-group-01940"] --> sample_group_01941["Sample Group 01941
+sample-group-01941"]
+    sample_group_01960["Sample Group 01960
+sample-group-01960"] --> sample_group_01961["Sample Group 01961
+sample-group-01961"]
+    sample_group_01980["Sample Group 01980
+sample-group-01980"] --> sample_group_01981["Sample Group 01981
+sample-group-01981"]
+    sample_group_02000["Sample Group 02000
+sample-group-02000"] --> sample_group_02001["Sample Group 02001
+sample-group-02001"]
+    sample_group_02020["Sample Group 02020
+sample-group-02020"] --> sample_group_02021["Sample Group 02021
+sample-group-02021"]
+    sample_group_02040["Sample Group 02040
+sample-group-02040"] --> sample_group_02041["Sample Group 02041
+sample-group-02041"]
+    sample_group_02060["Sample Group 02060
+sample-group-02060"] --> sample_group_02061["Sample Group 02061
+sample-group-02061"]
+    sample_group_02080["Sample Group 02080
+sample-group-02080"] --> sample_group_02081["Sample Group 02081
+sample-group-02081"]
+    sample_group_02100["Sample Group 02100
+sample-group-02100"] --> sample_group_02101["Sample Group 02101
+sample-group-02101"]
+    sample_group_02120["Sample Group 02120
+sample-group-02120"] --> sample_group_02121["Sample Group 02121
+sample-group-02121"]
+    sample_group_02140["Sample Group 02140
+sample-group-02140"] --> sample_group_02141["Sample Group 02141
+sample-group-02141"]
+    sample_group_02160["Sample Group 02160
+sample-group-02160"] --> sample_group_02161["Sample Group 02161
+sample-group-02161"]
+    sample_group_02180["Sample Group 02180
+sample-group-02180"] --> sample_group_02181["Sample Group 02181
+sample-group-02181"]
+    sample_group_02200["Sample Group 02200
+sample-group-02200"] --> sample_group_02201["Sample Group 02201
+sample-group-02201"]
+    sample_group_02220["Sample Group 02220
+sample-group-02220"] --> sample_group_02221["Sample Group 02221
+sample-group-02221"]
+    sample_group_02240["Sample Group 02240
+sample-group-02240"] --> sample_group_02241["Sample Group 02241
+sample-group-02241"]
+    sample_group_02260["Sample Group 02260
+sample-group-02260"] --> sample_group_02261["Sample Group 02261
+sample-group-02261"]
+    sample_group_02280["Sample Group 02280
+sample-group-02280"] --> sample_group_02281["Sample Group 02281
+sample-group-02281"]
+    sample_group_02300["Sample Group 02300
+sample-group-02300"] --> sample_group_02301["Sample Group 02301
+sample-group-02301"]
+    sample_group_02320["Sample Group 02320
+sample-group-02320"] --> sample_group_02321["Sample Group 02321
+sample-group-02321"]
+    sample_group_02340["Sample Group 02340
+sample-group-02340"] --> sample_group_02341["Sample Group 02341
+sample-group-02341"]
+    sample_group_02360["Sample Group 02360
+sample-group-02360"] --> sample_group_02361["Sample Group 02361
+sample-group-02361"]
+    sample_group_02380["Sample Group 02380
+sample-group-02380"] --> sample_group_02381["Sample Group 02381
+sample-group-02381"]
+    sample_group_02400["Sample Group 02400
+sample-group-02400"] --> sample_group_02401["Sample Group 02401
+sample-group-02401"]
+    sample_group_02420["Sample Group 02420
+sample-group-02420"] --> sample_group_02421["Sample Group 02421
+sample-group-02421"]
+    sample_group_02440["Sample Group 02440
+sample-group-02440"] --> sample_group_02441["Sample Group 02441
+sample-group-02441"]
+    sample_group_02460["Sample Group 02460
+sample-group-02460"] --> sample_group_02461["Sample Group 02461
+sample-group-02461"]
+    sample_group_02480["Sample Group 02480
+sample-group-02480"] --> sample_group_02481["Sample Group 02481
+sample-group-02481"]
+    sample_group_02500["Sample Group 02500
+sample-group-02500"] --> sample_group_02501["Sample Group 02501
+sample-group-02501"]
+    sample_group_02520["Sample Group 02520
+sample-group-02520"] --> sample_group_02521["Sample Group 02521
+sample-group-02521"]
+    sample_group_02540["Sample Group 02540
+sample-group-02540"] --> sample_group_02541["Sample Group 02541
+sample-group-02541"]
+    sample_group_02560["Sample Group 02560
+sample-group-02560"] --> sample_group_02561["Sample Group 02561
+sample-group-02561"]
+    sample_group_02580["Sample Group 02580
+sample-group-02580"] --> sample_group_02581["Sample Group 02581
+sample-group-02581"]
+    sample_group_02600["Sample Group 02600
+sample-group-02600"] --> sample_group_02601["Sample Group 02601
+sample-group-02601"]
+    sample_group_02620["Sample Group 02620
+sample-group-02620"] --> sample_group_02621["Sample Group 02621
+sample-group-02621"]
+    sample_group_02640["Sample Group 02640
+sample-group-02640"] --> sample_group_02641["Sample Group 02641
+sample-group-02641"]
+    sample_group_02660["Sample Group 02660
+sample-group-02660"] --> sample_group_02661["Sample Group 02661
+sample-group-02661"]
+    sample_group_02680["Sample Group 02680
+sample-group-02680"] --> sample_group_02681["Sample Group 02681
+sample-group-02681"]
+    sample_group_02700["Sample Group 02700
+sample-group-02700"] --> sample_group_02701["Sample Group 02701
+sample-group-02701"]
+    sample_group_02720["Sample Group 02720
+sample-group-02720"] --> sample_group_02721["Sample Group 02721
+sample-group-02721"]
+    sample_group_02740["Sample Group 02740
+sample-group-02740"] --> sample_group_02741["Sample Group 02741
+sample-group-02741"]
+    sample_group_02760["Sample Group 02760
+sample-group-02760"] --> sample_group_02761["Sample Group 02761
+sample-group-02761"]
+    sample_group_02780["Sample Group 02780
+sample-group-02780"] --> sample_group_02781["Sample Group 02781
+sample-group-02781"]
+    sample_group_02800["Sample Group 02800
+sample-group-02800"] --> sample_group_02801["Sample Group 02801
+sample-group-02801"]
+    sample_group_02820["Sample Group 02820
+sample-group-02820"] --> sample_group_02821["Sample Group 02821
+sample-group-02821"]
+    sample_group_02840["Sample Group 02840
+sample-group-02840"] --> sample_group_02841["Sample Group 02841
+sample-group-02841"]
+    sample_group_02860["Sample Group 02860
+sample-group-02860"] --> sample_group_02861["Sample Group 02861
+sample-group-02861"]
+    sample_group_02880["Sample Group 02880
+sample-group-02880"] --> sample_group_02881["Sample Group 02881
+sample-group-02881"]
+    sample_group_02900["Sample Group 02900
+sample-group-02900"] --> sample_group_02901["Sample Group 02901
+sample-group-02901"]
+    sample_group_02920["Sample Group 02920
+sample-group-02920"] --> sample_group_02921["Sample Group 02921
+sample-group-02921"]
+    sample_group_02940["Sample Group 02940
+sample-group-02940"] --> sample_group_02941["Sample Group 02941
+sample-group-02941"]
+    sample_group_02960["Sample Group 02960
+sample-group-02960"] --> sample_group_02961["Sample Group 02961
+sample-group-02961"]
+    sample_group_02980["Sample Group 02980
+sample-group-02980"] --> sample_group_02981["Sample Group 02981
+sample-group-02981"]
+    sample_group_03000["Sample Group 03000
+sample-group-03000"] --> sample_group_03001["Sample Group 03001
+sample-group-03001"]
+    sample_group_03020["Sample Group 03020
+sample-group-03020"] --> sample_group_03021["Sample Group 03021
+sample-group-03021"]
+    sample_group_03040["Sample Group 03040
+sample-group-03040"] --> sample_group_03041["Sample Group 03041
+sample-group-03041"]
+    sample_group_03060["Sample Group 03060
+sample-group-03060"] --> sample_group_03061["Sample Group 03061
+sample-group-03061"]
+    sample_group_03080["Sample Group 03080
+sample-group-03080"] --> sample_group_03081["Sample Group 03081
+sample-group-03081"]
+    sample_group_03100["Sample Group 03100
+sample-group-03100"] --> sample_group_03101["Sample Group 03101
+sample-group-03101"]
+    sample_group_03120["Sample Group 03120
+sample-group-03120"] --> sample_group_03121["Sample Group 03121
+sample-group-03121"]
+    sample_group_03140["Sample Group 03140
+sample-group-03140"] --> sample_group_03141["Sample Group 03141
+sample-group-03141"]
+    sample_group_03160["Sample Group 03160
+sample-group-03160"] --> sample_group_03161["Sample Group 03161
+sample-group-03161"]
+    sample_group_03180["Sample Group 03180
+sample-group-03180"] --> sample_group_03181["Sample Group 03181
+sample-group-03181"]
+    sample_group_03200["Sample Group 03200
+sample-group-03200"] --> sample_group_03201["Sample Group 03201
+sample-group-03201"]
+    sample_group_03220["Sample Group 03220
+sample-group-03220"] --> sample_group_03221["Sample Group 03221
+sample-group-03221"]
+    sample_group_03240["Sample Group 03240
+sample-group-03240"] --> sample_group_03241["Sample Group 03241
+sample-group-03241"]
+    sample_group_03260["Sample Group 03260
+sample-group-03260"] --> sample_group_03261["Sample Group 03261
+sample-group-03261"]
+    sample_group_03280["Sample Group 03280
+sample-group-03280"] --> sample_group_03281["Sample Group 03281
+sample-group-03281"]
+    sample_group_03300["Sample Group 03300
+sample-group-03300"] --> sample_group_03301["Sample Group 03301
+sample-group-03301"]
+    sample_group_03320["Sample Group 03320
+sample-group-03320"] --> sample_group_03321["Sample Group 03321
+sample-group-03321"]
+    sample_group_03340["Sample Group 03340
+sample-group-03340"] --> sample_group_03341["Sample Group 03341
+sample-group-03341"]
+    sample_group_03360["Sample Group 03360
+sample-group-03360"] --> sample_group_03361["Sample Group 03361
+sample-group-03361"]
+    sample_group_03380["Sample Group 03380
+sample-group-03380"] --> sample_group_03381["Sample Group 03381
+sample-group-03381"]
+    sample_group_03400["Sample Group 03400
+sample-group-03400"] --> sample_group_03401["Sample Group 03401
+sample-group-03401"]
+    sample_group_03420["Sample Group 03420
+sample-group-03420"] --> sample_group_03421["Sample Group 03421
+sample-group-03421"]
+    sample_group_03440["Sample Group 03440
+sample-group-03440"] --> sample_group_03441["Sample Group 03441
+sample-group-03441"]
+    sample_group_03460["Sample Group 03460
+sample-group-03460"] --> sample_group_03461["Sample Group 03461
+sample-group-03461"]
+    sample_group_03480["Sample Group 03480
+sample-group-03480"] --> sample_group_03481["Sample Group 03481
+sample-group-03481"]
+    sample_group_03500["Sample Group 03500
+sample-group-03500"] --> sample_group_03501["Sample Group 03501
+sample-group-03501"]
+    sample_group_03520["Sample Group 03520
+sample-group-03520"] --> sample_group_03521["Sample Group 03521
+sample-group-03521"]
+    sample_group_03540["Sample Group 03540
+sample-group-03540"] --> sample_group_03541["Sample Group 03541
+sample-group-03541"]
+    sample_group_03560["Sample Group 03560
+sample-group-03560"] --> sample_group_03561["Sample Group 03561
+sample-group-03561"]
+    sample_group_03580["Sample Group 03580
+sample-group-03580"] --> sample_group_03581["Sample Group 03581
+sample-group-03581"]
+    sample_group_03600["Sample Group 03600
+sample-group-03600"] --> sample_group_03601["Sample Group 03601
+sample-group-03601"]
+    sample_group_03620["Sample Group 03620
+sample-group-03620"] --> sample_group_03621["Sample Group 03621
+sample-group-03621"]
+    sample_group_03640["Sample Group 03640
+sample-group-03640"] --> sample_group_03641["Sample Group 03641
+sample-group-03641"]
+    sample_group_03660["Sample Group 03660
+sample-group-03660"] --> sample_group_03661["Sample Group 03661
+sample-group-03661"]
+    sample_group_03680["Sample Group 03680
+sample-group-03680"] --> sample_group_03681["Sample Group 03681
+sample-group-03681"]
+    sample_group_03700["Sample Group 03700
+sample-group-03700"] --> sample_group_03701["Sample Group 03701
+sample-group-03701"]
+    sample_group_03720["Sample Group 03720
+sample-group-03720"] --> sample_group_03721["Sample Group 03721
+sample-group-03721"]
+    sample_group_03740["Sample Group 03740
+sample-group-03740"] --> sample_group_03741["Sample Group 03741
+sample-group-03741"]
+    sample_group_03760["Sample Group 03760
+sample-group-03760"] --> sample_group_03761["Sample Group 03761
+sample-group-03761"]
+    sample_group_03780["Sample Group 03780
+sample-group-03780"] --> sample_group_03781["Sample Group 03781
+sample-group-03781"]
+    sample_group_03800["Sample Group 03800
+sample-group-03800"] --> sample_group_03801["Sample Group 03801
+sample-group-03801"]
+    sample_group_03820["Sample Group 03820
+sample-group-03820"] --> sample_group_03821["Sample Group 03821
+sample-group-03821"]
+    sample_group_03840["Sample Group 03840
+sample-group-03840"] --> sample_group_03841["Sample Group 03841
+sample-group-03841"]
+    sample_group_03860["Sample Group 03860
+sample-group-03860"] --> sample_group_03861["Sample Group 03861
+sample-group-03861"]
+    sample_group_03880["Sample Group 03880
+sample-group-03880"] --> sample_group_03881["Sample Group 03881
+sample-group-03881"]
+    sample_group_03900["Sample Group 03900
+sample-group-03900"] --> sample_group_03901["Sample Group 03901
+sample-group-03901"]
+    sample_group_03920["Sample Group 03920
+sample-group-03920"] --> sample_group_03921["Sample Group 03921
+sample-group-03921"]
+    sample_group_03940["Sample Group 03940
+sample-group-03940"] --> sample_group_03941["Sample Group 03941
+sample-group-03941"]
+    sample_group_03960["Sample Group 03960
+sample-group-03960"] --> sample_group_03961["Sample Group 03961
+sample-group-03961"]
+    sample_group_03980["Sample Group 03980
+sample-group-03980"] --> sample_group_03981["Sample Group 03981
+sample-group-03981"]
+    sample_group_04000["Sample Group 04000
+sample-group-04000"] --> sample_group_04001["Sample Group 04001
+sample-group-04001"]
+    sample_group_04020["Sample Group 04020
+sample-group-04020"] --> sample_group_04021["Sample Group 04021
+sample-group-04021"]
+    sample_group_04040["Sample Group 04040
+sample-group-04040"] --> sample_group_04041["Sample Group 04041
+sample-group-04041"]
+    sample_group_04060["Sample Group 04060
+sample-group-04060"] --> sample_group_04061["Sample Group 04061
+sample-group-04061"]
+    sample_group_04080["Sample Group 04080
+sample-group-04080"] --> sample_group_04081["Sample Group 04081
+sample-group-04081"]
+    sample_group_04100["Sample Group 04100
+sample-group-04100"] --> sample_group_04101["Sample Group 04101
+sample-group-04101"]
+    sample_group_04120["Sample Group 04120
+sample-group-04120"] --> sample_group_04121["Sample Group 04121
+sample-group-04121"]
+    sample_group_04140["Sample Group 04140
+sample-group-04140"] --> sample_group_04141["Sample Group 04141
+sample-group-04141"]
+    sample_group_04160["Sample Group 04160
+sample-group-04160"] --> sample_group_04161["Sample Group 04161
+sample-group-04161"]
+    sample_group_04180["Sample Group 04180
+sample-group-04180"] --> sample_group_04181["Sample Group 04181
+sample-group-04181"]
+    sample_group_04200["Sample Group 04200
+sample-group-04200"] --> sample_group_04201["Sample Group 04201
+sample-group-04201"]
+    sample_group_04220["Sample Group 04220
+sample-group-04220"] --> sample_group_04221["Sample Group 04221
+sample-group-04221"]
+    sample_group_04240["Sample Group 04240
+sample-group-04240"] --> sample_group_04241["Sample Group 04241
+sample-group-04241"]
+    sample_group_04260["Sample Group 04260
+sample-group-04260"] --> sample_group_04261["Sample Group 04261
+sample-group-04261"]
+    sample_group_04280["Sample Group 04280
+sample-group-04280"] --> sample_group_04281["Sample Group 04281
+sample-group-04281"]
+    sample_group_04300["Sample Group 04300
+sample-group-04300"] --> sample_group_04301["Sample Group 04301
+sample-group-04301"]
+    sample_group_04320["Sample Group 04320
+sample-group-04320"] --> sample_group_04321["Sample Group 04321
+sample-group-04321"]
+    sample_group_04340["Sample Group 04340
+sample-group-04340"] --> sample_group_04341["Sample Group 04341
+sample-group-04341"]
+    sample_group_04360["Sample Group 04360
+sample-group-04360"] --> sample_group_04361["Sample Group 04361
+sample-group-04361"]
+    sample_group_04380["Sample Group 04380
+sample-group-04380"] --> sample_group_04381["Sample Group 04381
+sample-group-04381"]
+    sample_group_04400["Sample Group 04400
+sample-group-04400"] --> sample_group_04401["Sample Group 04401
+sample-group-04401"]
+    sample_group_04420["Sample Group 04420
+sample-group-04420"] --> sample_group_04421["Sample Group 04421
+sample-group-04421"]
+    sample_group_04440["Sample Group 04440
+sample-group-04440"] --> sample_group_04441["Sample Group 04441
+sample-group-04441"]
+    sample_group_04460["Sample Group 04460
+sample-group-04460"] --> sample_group_04461["Sample Group 04461
+sample-group-04461"]
+    sample_group_04480["Sample Group 04480
+sample-group-04480"] --> sample_group_04481["Sample Group 04481
+sample-group-04481"]
+    sample_group_04500["Sample Group 04500
+sample-group-04500"] --> sample_group_04501["Sample Group 04501
+sample-group-04501"]
+    sample_group_04520["Sample Group 04520
+sample-group-04520"] --> sample_group_04521["Sample Group 04521
+sample-group-04521"]
+    sample_group_04540["Sample Group 04540
+sample-group-04540"] --> sample_group_04541["Sample Group 04541
+sample-group-04541"]
+    sample_group_04560["Sample Group 04560
+sample-group-04560"] --> sample_group_04561["Sample Group 04561
+sample-group-04561"]
+    sample_group_04580["Sample Group 04580
+sample-group-04580"] --> sample_group_04581["Sample Group 04581
+sample-group-04581"]
+    sample_group_04600["Sample Group 04600
+sample-group-04600"] --> sample_group_04601["Sample Group 04601
+sample-group-04601"]
+    sample_group_04620["Sample Group 04620
+sample-group-04620"] --> sample_group_04621["Sample Group 04621
+sample-group-04621"]
+    sample_group_04640["Sample Group 04640
+sample-group-04640"] --> sample_group_04641["Sample Group 04641
+sample-group-04641"]
+    sample_group_04660["Sample Group 04660
+sample-group-04660"] --> sample_group_04661["Sample Group 04661
+sample-group-04661"]
+    sample_group_04680["Sample Group 04680
+sample-group-04680"] --> sample_group_04681["Sample Group 04681
+sample-group-04681"]
+    sample_group_04700["Sample Group 04700
+sample-group-04700"] --> sample_group_04701["Sample Group 04701
+sample-group-04701"]
+    sample_group_04720["Sample Group 04720
+sample-group-04720"] --> sample_group_04721["Sample Group 04721
+sample-group-04721"]
+    sample_group_04740["Sample Group 04740
+sample-group-04740"] --> sample_group_04741["Sample Group 04741
+sample-group-04741"]
+    sample_group_04760["Sample Group 04760
+sample-group-04760"] --> sample_group_04761["Sample Group 04761
+sample-group-04761"]
+    sample_group_04780["Sample Group 04780
+sample-group-04780"] --> sample_group_04781["Sample Group 04781
+sample-group-04781"]
+    sample_group_04800["Sample Group 04800
+sample-group-04800"] --> sample_group_04801["Sample Group 04801
+sample-group-04801"]
+    sample_group_04820["Sample Group 04820
+sample-group-04820"] --> sample_group_04821["Sample Group 04821
+sample-group-04821"]
+    sample_group_04840["Sample Group 04840
+sample-group-04840"] --> sample_group_04841["Sample Group 04841
+sample-group-04841"]
+    sample_group_04860["Sample Group 04860
+sample-group-04860"] --> sample_group_04861["Sample Group 04861
+sample-group-04861"]
+    sample_group_04880["Sample Group 04880
+sample-group-04880"] --> sample_group_04881["Sample Group 04881
+sample-group-04881"]
+    sample_group_04900["Sample Group 04900
+sample-group-04900"] --> sample_group_04901["Sample Group 04901
+sample-group-04901"]
+    sample_group_04920["Sample Group 04920
+sample-group-04920"] --> sample_group_04921["Sample Group 04921
+sample-group-04921"]
+    sample_group_04940["Sample Group 04940
+sample-group-04940"] --> sample_group_04941["Sample Group 04941
+sample-group-04941"]
+    sample_group_04960["Sample Group 04960
+sample-group-04960"] --> sample_group_04961["Sample Group 04961
+sample-group-04961"]
+    sample_group_04980["Sample Group 04980
+sample-group-04980"] --> sample_group_04981["Sample Group 04981
+sample-group-04981"]
+    sample_group_05000["Sample Group 05000
+sample-group-05000"] --> sample_group_05001["Sample Group 05001
+sample-group-05001"]
+    sample_group_05020["Sample Group 05020
+sample-group-05020"] --> sample_group_05021["Sample Group 05021
+sample-group-05021"]
+    sample_group_05040["Sample Group 05040
+sample-group-05040"] --> sample_group_05041["Sample Group 05041
+sample-group-05041"]
+    sample_group_05060["Sample Group 05060
+sample-group-05060"] --> sample_group_05061["Sample Group 05061
+sample-group-05061"]
+    sample_group_05080["Sample Group 05080
+sample-group-05080"] --> sample_group_05081["Sample Group 05081
+sample-group-05081"]
+    sample_group_05100["Sample Group 05100
+sample-group-05100"] --> sample_group_05101["Sample Group 05101
+sample-group-05101"]
+    sample_group_05120["Sample Group 05120
+sample-group-05120"] --> sample_group_05121["Sample Group 05121
+sample-group-05121"]
+    sample_group_05140["Sample Group 05140
+sample-group-05140"] --> sample_group_05141["Sample Group 05141
+sample-group-05141"]
+    sample_group_05160["Sample Group 05160
+sample-group-05160"] --> sample_group_05161["Sample Group 05161
+sample-group-05161"]
+    sample_group_05180["Sample Group 05180
+sample-group-05180"] --> sample_group_05181["Sample Group 05181
+sample-group-05181"]
+    sample_group_05200["Sample Group 05200
+sample-group-05200"] --> sample_group_05201["Sample Group 05201
+sample-group-05201"]
+    sample_group_05220["Sample Group 05220
+sample-group-05220"] --> sample_group_05221["Sample Group 05221
+sample-group-05221"]
+    sample_group_05240["Sample Group 05240
+sample-group-05240"] --> sample_group_05241["Sample Group 05241
+sample-group-05241"]
+    sample_group_05260["Sample Group 05260
+sample-group-05260"] --> sample_group_05261["Sample Group 05261
+sample-group-05261"]
+    sample_group_05280["Sample Group 05280
+sample-group-05280"] --> sample_group_05281["Sample Group 05281
+sample-group-05281"]
+    sample_group_05300["Sample Group 05300
+sample-group-05300"] --> sample_group_05301["Sample Group 05301
+sample-group-05301"]
+    sample_group_05320["Sample Group 05320
+sample-group-05320"] --> sample_group_05321["Sample Group 05321
+sample-group-05321"]
+    sample_group_05340["Sample Group 05340
+sample-group-05340"] --> sample_group_05341["Sample Group 05341
+sample-group-05341"]
+    sample_group_05360["Sample Group 05360
+sample-group-05360"] --> sample_group_05361["Sample Group 05361
+sample-group-05361"]
+    sample_group_05380["Sample Group 05380
+sample-group-05380"] --> sample_group_05381["Sample Group 05381
+sample-group-05381"]
+    sample_group_05400["Sample Group 05400
+sample-group-05400"] --> sample_group_05401["Sample Group 05401
+sample-group-05401"]
+    sample_group_05420["Sample Group 05420
+sample-group-05420"] --> sample_group_05421["Sample Group 05421
+sample-group-05421"]
+    sample_group_05440["Sample Group 05440
+sample-group-05440"] --> sample_group_05441["Sample Group 05441
+sample-group-05441"]
+    sample_group_05460["Sample Group 05460
+sample-group-05460"] --> sample_group_05461["Sample Group 05461
+sample-group-05461"]
+    sample_group_05480["Sample Group 05480
+sample-group-05480"] --> sample_group_05481["Sample Group 05481
+sample-group-05481"]
+    sample_group_05500["Sample Group 05500
+sample-group-05500"] --> sample_group_05501["Sample Group 05501
+sample-group-05501"]
+    sample_group_05520["Sample Group 05520
+sample-group-05520"] --> sample_group_05521["Sample Group 05521
+sample-group-05521"]
+    sample_group_05540["Sample Group 05540
+sample-group-05540"] --> sample_group_05541["Sample Group 05541
+sample-group-05541"]
+    sample_group_05560["Sample Group 05560
+sample-group-05560"] --> sample_group_05561["Sample Group 05561
+sample-group-05561"]
+    sample_group_05580["Sample Group 05580
+sample-group-05580"] --> sample_group_05581["Sample Group 05581
+sample-group-05581"]
+    sample_group_05600["Sample Group 05600
+sample-group-05600"] --> sample_group_05601["Sample Group 05601
+sample-group-05601"]
+    sample_group_05620["Sample Group 05620
+sample-group-05620"] --> sample_group_05621["Sample Group 05621
+sample-group-05621"]
+    sample_group_05640["Sample Group 05640
+sample-group-05640"] --> sample_group_05641["Sample Group 05641
+sample-group-05641"]
+    sample_group_05660["Sample Group 05660
+sample-group-05660"] --> sample_group_05661["Sample Group 05661
+sample-group-05661"]
+    sample_group_05680["Sample Group 05680
+sample-group-05680"] --> sample_group_05681["Sample Group 05681
+sample-group-05681"]
+    sample_group_05700["Sample Group 05700
+sample-group-05700"] --> sample_group_05701["Sample Group 05701
+sample-group-05701"]
+    sample_group_05720["Sample Group 05720
+sample-group-05720"] --> sample_group_05721["Sample Group 05721
+sample-group-05721"]
+    sample_group_05740["Sample Group 05740
+sample-group-05740"] --> sample_group_05741["Sample Group 05741
+sample-group-05741"]
+    sample_group_05760["Sample Group 05760
+sample-group-05760"] --> sample_group_05761["Sample Group 05761
+sample-group-05761"]
+    sample_group_05780["Sample Group 05780
+sample-group-05780"] --> sample_group_05781["Sample Group 05781
+sample-group-05781"]
+    sample_group_05800["Sample Group 05800
+sample-group-05800"] --> sample_group_05801["Sample Group 05801
+sample-group-05801"]
+    sample_group_05820["Sample Group 05820
+sample-group-05820"] --> sample_group_05821["Sample Group 05821
+sample-group-05821"]
+    sample_group_05840["Sample Group 05840
+sample-group-05840"] --> sample_group_05841["Sample Group 05841
+sample-group-05841"]
+    sample_group_05860["Sample Group 05860
+sample-group-05860"] --> sample_group_05861["Sample Group 05861
+sample-group-05861"]
+    sample_group_05880["Sample Group 05880
+sample-group-05880"] --> sample_group_05881["Sample Group 05881
+sample-group-05881"]
+    sample_group_05900["Sample Group 05900
+sample-group-05900"] --> sample_group_05901["Sample Group 05901
+sample-group-05901"]
+    sample_group_05920["Sample Group 05920
+sample-group-05920"] --> sample_group_05921["Sample Group 05921
+sample-group-05921"]
+    sample_group_05940["Sample Group 05940
+sample-group-05940"] --> sample_group_05941["Sample Group 05941
+sample-group-05941"]
+    sample_group_05960["Sample Group 05960
+sample-group-05960"] --> sample_group_05961["Sample Group 05961
+sample-group-05961"]
+    sample_group_05980["Sample Group 05980
+sample-group-05980"] --> sample_group_05981["Sample Group 05981
+sample-group-05981"]
+    sample_group_06000["Sample Group 06000
+sample-group-06000"] --> sample_group_06001["Sample Group 06001
+sample-group-06001"]
+    sample_group_06020["Sample Group 06020
+sample-group-06020"] --> sample_group_06021["Sample Group 06021
+sample-group-06021"]
+    sample_group_06040["Sample Group 06040
+sample-group-06040"] --> sample_group_06041["Sample Group 06041
+sample-group-06041"]
+    sample_group_06060["Sample Group 06060
+sample-group-06060"] --> sample_group_06061["Sample Group 06061
+sample-group-06061"]
+    sample_group_06080["Sample Group 06080
+sample-group-06080"] --> sample_group_06081["Sample Group 06081
+sample-group-06081"]
+    sample_group_06100["Sample Group 06100
+sample-group-06100"] --> sample_group_06101["Sample Group 06101
+sample-group-06101"]
+    sample_group_06120["Sample Group 06120
+sample-group-06120"] --> sample_group_06121["Sample Group 06121
+sample-group-06121"]
+    sample_group_06140["Sample Group 06140
+sample-group-06140"] --> sample_group_06141["Sample Group 06141
+sample-group-06141"]
+    sample_group_06160["Sample Group 06160
+sample-group-06160"] --> sample_group_06161["Sample Group 06161
+sample-group-06161"]
+    sample_group_06180["Sample Group 06180
+sample-group-06180"] --> sample_group_06181["Sample Group 06181
+sample-group-06181"]
+    sample_group_06200["Sample Group 06200
+sample-group-06200"] --> sample_group_06201["Sample Group 06201
+sample-group-06201"]
+    sample_group_06220["Sample Group 06220
+sample-group-06220"] --> sample_group_06221["Sample Group 06221
+sample-group-06221"]
+    sample_group_06240["Sample Group 06240
+sample-group-06240"] --> sample_group_06241["Sample Group 06241
+sample-group-06241"]
+    sample_group_06260["Sample Group 06260
+sample-group-06260"] --> sample_group_06261["Sample Group 06261
+sample-group-06261"]
+    sample_group_06280["Sample Group 06280
+sample-group-06280"] --> sample_group_06281["Sample Group 06281
+sample-group-06281"]
+    sample_group_06300["Sample Group 06300
+sample-group-06300"] --> sample_group_06301["Sample Group 06301
+sample-group-06301"]
+    sample_group_06320["Sample Group 06320
+sample-group-06320"] --> sample_group_06321["Sample Group 06321
+sample-group-06321"]
+    sample_group_06340["Sample Group 06340
+sample-group-06340"] --> sample_group_06341["Sample Group 06341
+sample-group-06341"]
+    sample_group_06360["Sample Group 06360
+sample-group-06360"] --> sample_group_06361["Sample Group 06361
+sample-group-06361"]
+    sample_group_06380["Sample Group 06380
+sample-group-06380"] --> sample_group_06381["Sample Group 06381
+sample-group-06381"]
+    sample_group_06400["Sample Group 06400
+sample-group-06400"] --> sample_group_06401["Sample Group 06401
+sample-group-06401"]
+    sample_group_06420["Sample Group 06420
+sample-group-06420"] --> sample_group_06421["Sample Group 06421
+sample-group-06421"]
+    sample_group_06440["Sample Group 06440
+sample-group-06440"] --> sample_group_06441["Sample Group 06441
+sample-group-06441"]
+    sample_group_06460["Sample Group 06460
+sample-group-06460"] --> sample_group_06461["Sample Group 06461
+sample-group-06461"]
+    sample_group_06480["Sample Group 06480
+sample-group-06480"] --> sample_group_06481["Sample Group 06481
+sample-group-06481"]
+    sample_group_06500["Sample Group 06500
+sample-group-06500"] --> sample_group_06501["Sample Group 06501
+sample-group-06501"]
+    sample_group_06520["Sample Group 06520
+sample-group-06520"] --> sample_group_06521["Sample Group 06521
+sample-group-06521"]
+    sample_group_06540["Sample Group 06540
+sample-group-06540"] --> sample_group_06541["Sample Group 06541
+sample-group-06541"]
+    sample_group_06560["Sample Group 06560
+sample-group-06560"] --> sample_group_06561["Sample Group 06561
+sample-group-06561"]
+    sample_group_06580["Sample Group 06580
+sample-group-06580"] --> sample_group_06581["Sample Group 06581
+sample-group-06581"]
+    sample_group_06600["Sample Group 06600
+sample-group-06600"] --> sample_group_06601["Sample Group 06601
+sample-group-06601"]
+    sample_group_06620["Sample Group 06620
+sample-group-06620"] --> sample_group_06621["Sample Group 06621
+sample-group-06621"]
+    sample_group_06640["Sample Group 06640
+sample-group-06640"] --> sample_group_06641["Sample Group 06641
+sample-group-06641"]
+    sample_group_06660["Sample Group 06660
+sample-group-06660"] --> sample_group_06661["Sample Group 06661
+sample-group-06661"]
+    sample_group_06680["Sample Group 06680
+sample-group-06680"] --> sample_group_06681["Sample Group 06681
+sample-group-06681"]
+    sample_group_06700["Sample Group 06700
+sample-group-06700"] --> sample_group_06701["Sample Group 06701
+sample-group-06701"]
+    sample_group_06720["Sample Group 06720
+sample-group-06720"] --> sample_group_06721["Sample Group 06721
+sample-group-06721"]
+    sample_group_06740["Sample Group 06740
+sample-group-06740"] --> sample_group_06741["Sample Group 06741
+sample-group-06741"]
+    sample_group_06760["Sample Group 06760
+sample-group-06760"] --> sample_group_06761["Sample Group 06761
+sample-group-06761"]
+    sample_group_06780["Sample Group 06780
+sample-group-06780"] --> sample_group_06781["Sample Group 06781
+sample-group-06781"]
+    sample_group_06800["Sample Group 06800
+sample-group-06800"] --> sample_group_06801["Sample Group 06801
+sample-group-06801"]
+    sample_group_06820["Sample Group 06820
+sample-group-06820"] --> sample_group_06821["Sample Group 06821
+sample-group-06821"]
+    sample_group_06840["Sample Group 06840
+sample-group-06840"] --> sample_group_06841["Sample Group 06841
+sample-group-06841"]
+    sample_group_06860["Sample Group 06860
+sample-group-06860"] --> sample_group_06861["Sample Group 06861
+sample-group-06861"]
+    sample_group_06880["Sample Group 06880
+sample-group-06880"] --> sample_group_06881["Sample Group 06881
+sample-group-06881"]
+    sample_group_06900["Sample Group 06900
+sample-group-06900"] --> sample_group_06901["Sample Group 06901
+sample-group-06901"]
+    sample_group_06920["Sample Group 06920
+sample-group-06920"] --> sample_group_06921["Sample Group 06921
+sample-group-06921"]
+    sample_group_06940["Sample Group 06940
+sample-group-06940"] --> sample_group_06941["Sample Group 06941
+sample-group-06941"]
+    sample_group_06960["Sample Group 06960
+sample-group-06960"] --> sample_group_06961["Sample Group 06961
+sample-group-06961"]
+    sample_group_06980["Sample Group 06980
+sample-group-06980"] --> sample_group_06981["Sample Group 06981
+sample-group-06981"]
+    sample_group_07000["Sample Group 07000
+sample-group-07000"] --> sample_group_07001["Sample Group 07001
+sample-group-07001"]
+    sample_group_07020["Sample Group 07020
+sample-group-07020"] --> sample_group_07021["Sample Group 07021
+sample-group-07021"]
+    sample_group_07040["Sample Group 07040
+sample-group-07040"] --> sample_group_07041["Sample Group 07041
+sample-group-07041"]
+    sample_group_07060["Sample Group 07060
+sample-group-07060"] --> sample_group_07061["Sample Group 07061
+sample-group-07061"]
+    sample_group_07080["Sample Group 07080
+sample-group-07080"] --> sample_group_07081["Sample Group 07081
+sample-group-07081"]
+    sample_group_07100["Sample Group 07100
+sample-group-07100"] --> sample_group_07101["Sample Group 07101
+sample-group-07101"]
+    sample_group_07120["Sample Group 07120
+sample-group-07120"] --> sample_group_07121["Sample Group 07121
+sample-group-07121"]
+    sample_group_07140["Sample Group 07140
+sample-group-07140"] --> sample_group_07141["Sample Group 07141
+sample-group-07141"]
+    sample_group_07160["Sample Group 07160
+sample-group-07160"] --> sample_group_07161["Sample Group 07161
+sample-group-07161"]
+    sample_group_07180["Sample Group 07180
+sample-group-07180"] --> sample_group_07181["Sample Group 07181
+sample-group-07181"]
+    sample_group_07200["Sample Group 07200
+sample-group-07200"] --> sample_group_07201["Sample Group 07201
+sample-group-07201"]
+    sample_group_07220["Sample Group 07220
+sample-group-07220"] --> sample_group_07221["Sample Group 07221
+sample-group-07221"]
+    sample_group_07240["Sample Group 07240
+sample-group-07240"] --> sample_group_07241["Sample Group 07241
+sample-group-07241"]
+    sample_group_07260["Sample Group 07260
+sample-group-07260"] --> sample_group_07261["Sample Group 07261
+sample-group-07261"]
+    sample_group_07280["Sample Group 07280
+sample-group-07280"] --> sample_group_07281["Sample Group 07281
+sample-group-07281"]
+    sample_group_07300["Sample Group 07300
+sample-group-07300"] --> sample_group_07301["Sample Group 07301
+sample-group-07301"]
+    sample_group_07320["Sample Group 07320
+sample-group-07320"] --> sample_group_07321["Sample Group 07321
+sample-group-07321"]
+    sample_group_07340["Sample Group 07340
+sample-group-07340"] --> sample_group_07341["Sample Group 07341
+sample-group-07341"]
+    sample_group_07360["Sample Group 07360
+sample-group-07360"] --> sample_group_07361["Sample Group 07361
+sample-group-07361"]
+    sample_group_07380["Sample Group 07380
+sample-group-07380"] --> sample_group_07381["Sample Group 07381
+sample-group-07381"]
+    sample_group_07400["Sample Group 07400
+sample-group-07400"] --> sample_group_07401["Sample Group 07401
+sample-group-07401"]
+    sample_group_07420["Sample Group 07420
+sample-group-07420"] --> sample_group_07421["Sample Group 07421
+sample-group-07421"]
+    sample_group_07440["Sample Group 07440
+sample-group-07440"] --> sample_group_07441["Sample Group 07441
+sample-group-07441"]
+    sample_group_07460["Sample Group 07460
+sample-group-07460"] --> sample_group_07461["Sample Group 07461
+sample-group-07461"]
+    sample_group_07480["Sample Group 07480
+sample-group-07480"] --> sample_group_07481["Sample Group 07481
+sample-group-07481"]
+    sample_group_07500["Sample Group 07500
+sample-group-07500"] --> sample_group_07501["Sample Group 07501
+sample-group-07501"]
+    sample_group_07520["Sample Group 07520
+sample-group-07520"] --> sample_group_07521["Sample Group 07521
+sample-group-07521"]
+    sample_group_07540["Sample Group 07540
+sample-group-07540"] --> sample_group_07541["Sample Group 07541
+sample-group-07541"]
+    sample_group_07560["Sample Group 07560
+sample-group-07560"] --> sample_group_07561["Sample Group 07561
+sample-group-07561"]
+    sample_group_07580["Sample Group 07580
+sample-group-07580"] --> sample_group_07581["Sample Group 07581
+sample-group-07581"]
+    sample_group_07600["Sample Group 07600
+sample-group-07600"] --> sample_group_07601["Sample Group 07601
+sample-group-07601"]
+    sample_group_07620["Sample Group 07620
+sample-group-07620"] --> sample_group_07621["Sample Group 07621
+sample-group-07621"]
+    sample_group_07640["Sample Group 07640
+sample-group-07640"] --> sample_group_07641["Sample Group 07641
+sample-group-07641"]
+    sample_group_07660["Sample Group 07660
+sample-group-07660"] --> sample_group_07661["Sample Group 07661
+sample-group-07661"]
+    sample_group_07680["Sample Group 07680
+sample-group-07680"] --> sample_group_07681["Sample Group 07681
+sample-group-07681"]
+    sample_group_07700["Sample Group 07700
+sample-group-07700"] --> sample_group_07701["Sample Group 07701
+sample-group-07701"]
+    sample_group_07720["Sample Group 07720
+sample-group-07720"] --> sample_group_07721["Sample Group 07721
+sample-group-07721"]
+    sample_group_07740["Sample Group 07740
+sample-group-07740"] --> sample_group_07741["Sample Group 07741
+sample-group-07741"]
+    sample_group_07760["Sample Group 07760
+sample-group-07760"] --> sample_group_07761["Sample Group 07761
+sample-group-07761"]
+    sample_group_07780["Sample Group 07780
+sample-group-07780"] --> sample_group_07781["Sample Group 07781
+sample-group-07781"]
+    sample_group_07800["Sample Group 07800
+sample-group-07800"] --> sample_group_07801["Sample Group 07801
+sample-group-07801"]
+    sample_group_07820["Sample Group 07820
+sample-group-07820"] --> sample_group_07821["Sample Group 07821
+sample-group-07821"]
+    sample_group_07840["Sample Group 07840
+sample-group-07840"] --> sample_group_07841["Sample Group 07841
+sample-group-07841"]
+    sample_group_07860["Sample Group 07860
+sample-group-07860"] --> sample_group_07861["Sample Group 07861
+sample-group-07861"]
+    sample_group_07880["Sample Group 07880
+sample-group-07880"] --> sample_group_07881["Sample Group 07881
+sample-group-07881"]
+    sample_group_07900["Sample Group 07900
+sample-group-07900"] --> sample_group_07901["Sample Group 07901
+sample-group-07901"]
+    sample_group_07920["Sample Group 07920
+sample-group-07920"] --> sample_group_07921["Sample Group 07921
+sample-group-07921"]
+    sample_group_07940["Sample Group 07940
+sample-group-07940"] --> sample_group_07941["Sample Group 07941
+sample-group-07941"]
+    sample_group_07960["Sample Group 07960
+sample-group-07960"] --> sample_group_07961["Sample Group 07961
+sample-group-07961"]
+    sample_group_07980["Sample Group 07980
+sample-group-07980"] --> sample_group_07981["Sample Group 07981
+sample-group-07981"]
+    sample_group_08000["Sample Group 08000
+sample-group-08000"] --> sample_group_08001["Sample Group 08001
+sample-group-08001"]
+    sample_group_08020["Sample Group 08020
+sample-group-08020"] --> sample_group_08021["Sample Group 08021
+sample-group-08021"]
+    sample_group_08040["Sample Group 08040
+sample-group-08040"] --> sample_group_08041["Sample Group 08041
+sample-group-08041"]
+    sample_group_08060["Sample Group 08060
+sample-group-08060"] --> sample_group_08061["Sample Group 08061
+sample-group-08061"]
+    sample_group_08080["Sample Group 08080
+sample-group-08080"] --> sample_group_08081["Sample Group 08081
+sample-group-08081"]
+    sample_group_08100["Sample Group 08100
+sample-group-08100"] --> sample_group_08101["Sample Group 08101
+sample-group-08101"]
+    sample_group_08120["Sample Group 08120
+sample-group-08120"] --> sample_group_08121["Sample Group 08121
+sample-group-08121"]
+    sample_group_08140["Sample Group 08140
+sample-group-08140"] --> sample_group_08141["Sample Group 08141
+sample-group-08141"]
+    sample_group_08160["Sample Group 08160
+sample-group-08160"] --> sample_group_08161["Sample Group 08161
+sample-group-08161"]
+    sample_group_08180["Sample Group 08180
+sample-group-08180"] --> sample_group_08181["Sample Group 08181
+sample-group-08181"]
+    sample_group_08200["Sample Group 08200
+sample-group-08200"] --> sample_group_08201["Sample Group 08201
+sample-group-08201"]
+    sample_group_08220["Sample Group 08220
+sample-group-08220"] --> sample_group_08221["Sample Group 08221
+sample-group-08221"]
+    sample_group_08240["Sample Group 08240
+sample-group-08240"] --> sample_group_08241["Sample Group 08241
+sample-group-08241"]
+    sample_group_08260["Sample Group 08260
+sample-group-08260"] --> sample_group_08261["Sample Group 08261
+sample-group-08261"]
+    sample_group_08280["Sample Group 08280
+sample-group-08280"] --> sample_group_08281["Sample Group 08281
+sample-group-08281"]
+    sample_group_08300["Sample Group 08300
+sample-group-08300"] --> sample_group_08301["Sample Group 08301
+sample-group-08301"]
+    sample_group_08320["Sample Group 08320
+sample-group-08320"] --> sample_group_08321["Sample Group 08321
+sample-group-08321"]
+    sample_group_08340["Sample Group 08340
+sample-group-08340"] --> sample_group_08341["Sample Group 08341
+sample-group-08341"]
+    sample_group_08360["Sample Group 08360
+sample-group-08360"] --> sample_group_08361["Sample Group 08361
+sample-group-08361"]
+    sample_group_08380["Sample Group 08380
+sample-group-08380"] --> sample_group_08381["Sample Group 08381
+sample-group-08381"]
+    sample_group_08400["Sample Group 08400
+sample-group-08400"] --> sample_group_08401["Sample Group 08401
+sample-group-08401"]
+    sample_group_08420["Sample Group 08420
+sample-group-08420"] --> sample_group_08421["Sample Group 08421
+sample-group-08421"]
+    sample_group_08440["Sample Group 08440
+sample-group-08440"] --> sample_group_08441["Sample Group 08441
+sample-group-08441"]
+    sample_group_08460["Sample Group 08460
+sample-group-08460"] --> sample_group_08461["Sample Group 08461
+sample-group-08461"]
+    sample_group_08480["Sample Group 08480
+sample-group-08480"] --> sample_group_08481["Sample Group 08481
+sample-group-08481"]
+    sample_group_08500["Sample Group 08500
+sample-group-08500"] --> sample_group_08501["Sample Group 08501
+sample-group-08501"]
+    sample_group_08520["Sample Group 08520
+sample-group-08520"] --> sample_group_08521["Sample Group 08521
+sample-group-08521"]
+    sample_group_08540["Sample Group 08540
+sample-group-08540"] --> sample_group_08541["Sample Group 08541
+sample-group-08541"]
+    sample_group_08560["Sample Group 08560
+sample-group-08560"] --> sample_group_08561["Sample Group 08561
+sample-group-08561"]
+    sample_group_08580["Sample Group 08580
+sample-group-08580"] --> sample_group_08581["Sample Group 08581
+sample-group-08581"]
+    sample_group_08600["Sample Group 08600
+sample-group-08600"] --> sample_group_08601["Sample Group 08601
+sample-group-08601"]
+    sample_group_08620["Sample Group 08620
+sample-group-08620"] --> sample_group_08621["Sample Group 08621
+sample-group-08621"]
+    sample_group_08640["Sample Group 08640
+sample-group-08640"] --> sample_group_08641["Sample Group 08641
+sample-group-08641"]
+    sample_group_08660["Sample Group 08660
+sample-group-08660"] --> sample_group_08661["Sample Group 08661
+sample-group-08661"]
+    sample_group_08680["Sample Group 08680
+sample-group-08680"] --> sample_group_08681["Sample Group 08681
+sample-group-08681"]
+    sample_group_08700["Sample Group 08700
+sample-group-08700"] --> sample_group_08701["Sample Group 08701
+sample-group-08701"]
+    sample_group_08720["Sample Group 08720
+sample-group-08720"] --> sample_group_08721["Sample Group 08721
+sample-group-08721"]
+    sample_group_08740["Sample Group 08740
+sample-group-08740"] --> sample_group_08741["Sample Group 08741
+sample-group-08741"]
+    sample_group_08760["Sample Group 08760
+sample-group-08760"] --> sample_group_08761["Sample Group 08761
+sample-group-08761"]
+    sample_group_08780["Sample Group 08780
+sample-group-08780"] --> sample_group_08781["Sample Group 08781
+sample-group-08781"]
+    sample_group_08800["Sample Group 08800
+sample-group-08800"] --> sample_group_08801["Sample Group 08801
+sample-group-08801"]
+    sample_group_08820["Sample Group 08820
+sample-group-08820"] --> sample_group_08821["Sample Group 08821
+sample-group-08821"]
+    sample_group_08840["Sample Group 08840
+sample-group-08840"] --> sample_group_08841["Sample Group 08841
+sample-group-08841"]
+    sample_group_08860["Sample Group 08860
+sample-group-08860"] --> sample_group_08861["Sample Group 08861
+sample-group-08861"]
+    sample_group_08880["Sample Group 08880
+sample-group-08880"] --> sample_group_08881["Sample Group 08881
+sample-group-08881"]
+    sample_group_08900["Sample Group 08900
+sample-group-08900"] --> sample_group_08901["Sample Group 08901
+sample-group-08901"]
+    sample_group_08920["Sample Group 08920
+sample-group-08920"] --> sample_group_08921["Sample Group 08921
+sample-group-08921"]
+    sample_group_08940["Sample Group 08940
+sample-group-08940"] --> sample_group_08941["Sample Group 08941
+sample-group-08941"]
+    sample_group_08960["Sample Group 08960
+sample-group-08960"] --> sample_group_08961["Sample Group 08961
+sample-group-08961"]
+    sample_group_08980["Sample Group 08980
+sample-group-08980"] --> sample_group_08981["Sample Group 08981
+sample-group-08981"]
+    sample_group_09000["Sample Group 09000
+sample-group-09000"] --> sample_group_09001["Sample Group 09001
+sample-group-09001"]
+    sample_group_09020["Sample Group 09020
+sample-group-09020"] --> sample_group_09021["Sample Group 09021
+sample-group-09021"]
+    sample_group_09040["Sample Group 09040
+sample-group-09040"] --> sample_group_09041["Sample Group 09041
+sample-group-09041"]
+    sample_group_09060["Sample Group 09060
+sample-group-09060"] --> sample_group_09061["Sample Group 09061
+sample-group-09061"]
+    sample_group_09080["Sample Group 09080
+sample-group-09080"] --> sample_group_09081["Sample Group 09081
+sample-group-09081"]
+    sample_group_09100["Sample Group 09100
+sample-group-09100"] --> sample_group_09101["Sample Group 09101
+sample-group-09101"]
+    sample_group_09120["Sample Group 09120
+sample-group-09120"] --> sample_group_09121["Sample Group 09121
+sample-group-09121"]
+    sample_group_09140["Sample Group 09140
+sample-group-09140"] --> sample_group_09141["Sample Group 09141
+sample-group-09141"]
+    sample_group_09160["Sample Group 09160
+sample-group-09160"] --> sample_group_09161["Sample Group 09161
+sample-group-09161"]
+    sample_group_09180["Sample Group 09180
+sample-group-09180"] --> sample_group_09181["Sample Group 09181
+sample-group-09181"]
+    sample_group_09200["Sample Group 09200
+sample-group-09200"] --> sample_group_09201["Sample Group 09201
+sample-group-09201"]
+    sample_group_09220["Sample Group 09220
+sample-group-09220"] --> sample_group_09221["Sample Group 09221
+sample-group-09221"]
+    sample_group_09240["Sample Group 09240
+sample-group-09240"] --> sample_group_09241["Sample Group 09241
+sample-group-09241"]
+    sample_group_09260["Sample Group 09260
+sample-group-09260"] --> sample_group_09261["Sample Group 09261
+sample-group-09261"]
+    sample_group_09280["Sample Group 09280
+sample-group-09280"] --> sample_group_09281["Sample Group 09281
+sample-group-09281"]
+    sample_group_09300["Sample Group 09300
+sample-group-09300"] --> sample_group_09301["Sample Group 09301
+sample-group-09301"]
+    sample_group_09320["Sample Group 09320
+sample-group-09320"] --> sample_group_09321["Sample Group 09321
+sample-group-09321"]
+    sample_group_09340["Sample Group 09340
+sample-group-09340"] --> sample_group_09341["Sample Group 09341
+sample-group-09341"]
+    sample_group_09360["Sample Group 09360
+sample-group-09360"] --> sample_group_09361["Sample Group 09361
+sample-group-09361"]
+    sample_group_09380["Sample Group 09380
+sample-group-09380"] --> sample_group_09381["Sample Group 09381
+sample-group-09381"]
+    sample_group_09400["Sample Group 09400
+sample-group-09400"] --> sample_group_09401["Sample Group 09401
+sample-group-09401"]
+    sample_group_09420["Sample Group 09420
+sample-group-09420"] --> sample_group_09421["Sample Group 09421
+sample-group-09421"]
+    sample_group_09440["Sample Group 09440
+sample-group-09440"] --> sample_group_09441["Sample Group 09441
+sample-group-09441"]
+    sample_group_09460["Sample Group 09460
+sample-group-09460"] --> sample_group_09461["Sample Group 09461
+sample-group-09461"]
+    sample_group_09480["Sample Group 09480
+sample-group-09480"] --> sample_group_09481["Sample Group 09481
+sample-group-09481"]
+    sample_group_09500["Sample Group 09500
+sample-group-09500"] --> sample_group_09501["Sample Group 09501
+sample-group-09501"]
+    sample_group_09520["Sample Group 09520
+sample-group-09520"] --> sample_group_09521["Sample Group 09521
+sample-group-09521"]
+    sample_group_09540["Sample Group 09540
+sample-group-09540"] --> sample_group_09541["Sample Group 09541
+sample-group-09541"]
+    sample_group_09560["Sample Group 09560
+sample-group-09560"] --> sample_group_09561["Sample Group 09561
+sample-group-09561"]
+    sample_group_09580["Sample Group 09580
+sample-group-09580"] --> sample_group_09581["Sample Group 09581
+sample-group-09581"]
+    sample_group_09600["Sample Group 09600
+sample-group-09600"] --> sample_group_09601["Sample Group 09601
+sample-group-09601"]
+    sample_group_09620["Sample Group 09620
+sample-group-09620"] --> sample_group_09621["Sample Group 09621
+sample-group-09621"]
+    sample_group_09640["Sample Group 09640
+sample-group-09640"] --> sample_group_09641["Sample Group 09641
+sample-group-09641"]
+    sample_group_09660["Sample Group 09660
+sample-group-09660"] --> sample_group_09661["Sample Group 09661
+sample-group-09661"]
+    sample_group_09680["Sample Group 09680
+sample-group-09680"] --> sample_group_09681["Sample Group 09681
+sample-group-09681"]
+    sample_group_09700["Sample Group 09700
+sample-group-09700"] --> sample_group_09701["Sample Group 09701
+sample-group-09701"]
+    sample_group_09720["Sample Group 09720
+sample-group-09720"] --> sample_group_09721["Sample Group 09721
+sample-group-09721"]
+    sample_group_09740["Sample Group 09740
+sample-group-09740"] --> sample_group_09741["Sample Group 09741
+sample-group-09741"]
+    sample_group_09760["Sample Group 09760
+sample-group-09760"] --> sample_group_09761["Sample Group 09761
+sample-group-09761"]
+    sample_group_09780["Sample Group 09780
+sample-group-09780"] --> sample_group_09781["Sample Group 09781
+sample-group-09781"]
+    sample_group_09800["Sample Group 09800
+sample-group-09800"] --> sample_group_09801["Sample Group 09801
+sample-group-09801"]
+    sample_group_09820["Sample Group 09820
+sample-group-09820"] --> sample_group_09821["Sample Group 09821
+sample-group-09821"]
+    sample_group_09840["Sample Group 09840
+sample-group-09840"] --> sample_group_09841["Sample Group 09841
+sample-group-09841"]
+    sample_group_09860["Sample Group 09860
+sample-group-09860"] --> sample_group_09861["Sample Group 09861
+sample-group-09861"]
+    sample_group_09880["Sample Group 09880
+sample-group-09880"] --> sample_group_09881["Sample Group 09881
+sample-group-09881"]
+    sample_group_09900["Sample Group 09900
+sample-group-09900"] --> sample_group_09901["Sample Group 09901
+sample-group-09901"]
+    sample_group_09920["Sample Group 09920
+sample-group-09920"] --> sample_group_09921["Sample Group 09921
+sample-group-09921"]
+    sample_group_09940["Sample Group 09940
+sample-group-09940"] --> sample_group_09941["Sample Group 09941
+sample-group-09941"]
+    sample_group_09960["Sample Group 09960
+sample-group-09960"] --> sample_group_09961["Sample Group 09961
+sample-group-09961"]
+    sample_group_09980["Sample Group 09980
+sample-group-09980"] --> sample_group_09981["Sample Group 09981
+sample-group-09981"]
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    (() => {
+      let currentLanguage = "ja";
+      const toggle = document.getElementById("languageToggle");
+      const applyLanguage = (language) => {
+        currentLanguage = language;
+        document.documentElement.lang = language;
+        document.querySelectorAll("[data-ja][data-en]").forEach((element) => {
+          element.textContent = language === "ja" ? element.dataset.ja : element.dataset.en;
+        });
+        toggle.textContent = language === "ja" ? "English" : "日本語";
+        toggle.setAttribute("aria-label", language === "ja" ? "Switch to English" : "日本語に切り替え");
+      };
+      toggle.addEventListener("click", () => applyLanguage(currentLanguage === "ja" ? "en" : "ja"));
+      applyLanguage("ja");
+
+      const links = Array.from(document.querySelectorAll(".nav-list a"));
+      const sections = links
+        .map((link) => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          links.forEach((link) => {
+            link.classList.toggle("active", link.getAttribute("href") === "#" + entry.target.id);
+          });
+        });
+      }, { rootMargin: "-15% 0px -70% 0px" });
+      sections.forEach((section) => observer.observe(section));
+    })();
+  </script>
+</body>
+</html>

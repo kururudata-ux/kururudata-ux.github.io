@@ -91,6 +91,21 @@
     .lead{max-width:780px;color:var(--muted);font-size:18px}
     .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
     .pill{padding:5px 10px;border-radius:999px;background:var(--mint);color:var(--deep);font-size:12px;font-weight:800}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+    .button{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:0 17px;
+      border:1px solid var(--deep);
+      border-radius:10px;
+      color:var(--deep);
+      background:var(--surface);
+      font-weight:800;
+      text-decoration:none;
+    }
+    .button.primary{color:#fff;background:linear-gradient(135deg,var(--deep),var(--deep-2))}
     ul,ol{padding-left:23px}
     li{margin:7px 0}
     .callout{
@@ -160,6 +175,10 @@
           <span class="pill">HTML / CSV / Mermaid</span>
           <span class="pill">読み取り専用</span>
         </div>
+        <div class="actions">
+          <a class="button primary" href="entra-group-audit-downloads.html">ダウンロードページ</a>
+          <a class="button" href="samples/entra-group-audit-sample.html">サンプルHTMLを見る</a>
+        </div>
       </div>
 
       <section id="purpose">
@@ -219,6 +238,7 @@
         <pre><code>.\EntraGroupAuditReport.ps1 `
   -GenerateSampleData `
   -SampleGroupCount 10000</code></pre>
+        <div class="callout">公開用ファイルは<a href="entra-group-audit-downloads.html">ダウンロードページ</a>から取得できます。</div>
       </section>
 
       <section id="outputs">
