@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Entra IDユーザー非アクティブ監査スクリプトの目的、前提、実行手順、出力内容。">
+  <link rel="icon" href="data:,">
+  <title>Entra ID User Inactivity Audit | Kururu Data</title>
+  <style>
+    :root{--bg:#0b2f24;--mid:#1d684f;--soft:#e7f2ec;--surface:#fff;--text:#12231d;--muted:#4f645a;--line:#c8ddd1;--deep:#123f30;--deep2:#237158;--mint:#e2f0e8}
+    *{box-sizing:border-box} body{margin:0;color:var(--text);background:linear-gradient(145deg,var(--bg) 0%,var(--mid) 34%,#8cc3aa 68%,var(--soft) 100%);font-family:"Segoe UI",Aptos,Calibri,sans-serif;line-height:1.7}
+    header{position:sticky;top:0;z-index:10;border-bottom:1px solid var(--line);background:rgba(247,251,248,.94);backdrop-filter:blur(10px)}
+    .head,.layout{max-width:1120px;margin:0 auto}.head{height:70px;padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+    .brand,.back{text-decoration:none;font-weight:800}.brand{color:var(--text)}.back{color:var(--deep);font-size:14px}
+    .layout{padding:34px 20px 70px}.hero,section{margin-bottom:18px;padding:28px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:0 16px 36px rgba(8,40,29,.12)}
+    .hero{border-top:6px solid var(--deep);background:linear-gradient(145deg,#fff,var(--mint))}
+    .num{color:var(--deep2);font:800 13px Consolas,monospace;letter-spacing:.08em} h1{margin:10px 0 12px;font-size:clamp(32px,5vw,52px);line-height:1.08;letter-spacing:-.03em}
+    h2{margin:0 0 12px;font-size:clamp(24px,3vw,34px)} p{margin:0 0 10px}.lead{color:var(--muted);font-size:18px;max-width:780px}
+    .pill{display:inline-block;margin:4px 6px 0 0;padding:5px 10px;border-radius:999px;background:var(--mint);color:var(--deep);font-size:12px;font-weight:800}
+    .actions{margin-top:16px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:1px solid var(--deep);border-radius:10px;color:#fff;background:linear-gradient(135deg,var(--deep),var(--deep2));font-weight:800;text-decoration:none}
+    .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px} table{width:100%;border-collapse:collapse;min-width:680px;font-size:14px}
+    th,td{padding:11px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} th{color:#fff;background:linear-gradient(135deg,var(--deep),var(--deep2))} tr:last-child td{border-bottom:0}
+    pre{overflow:auto;margin:12px 0;padding:15px;border-radius:10px;background:#10251e;color:#e9f6ef;font:13px/1.55 Consolas,"Courier New",monospace}
+    .callout{margin-top:12px;padding:13px 14px;border-left:5px solid var(--deep2);border-radius:10px;background:var(--mint)}
+    footer{padding:24px 20px;color:#d9eee3;text-align:center;font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="head">
+      <a class="brand" href="index.html">Kururu Data</a>
+      <a class="back" href="index.html#projects">← Projectsへ戻る</a>
+    </div>
+  </header>
+  <main class="layout">
+    <div class="hero">
+      <span class="num">P-05 / MICROSOFT ENTRA ID</span>
+      <h1>Entra ID ユーザー監査（非アクティブ）</h1>
+      <p class="lead">EntraUserInactivityReport.ps1 は、サインイン履歴がないユーザーや長期間サインインがないユーザーを抽出し、ユーザータイプ別に可視化したレポートを生成します。</p>
+      <span class="pill">PowerShell 5.1+</span><span class="pill">Microsoft Graph</span><span class="pill">User Inactivity</span>
+      <div class="actions"><a class="button" href="entra-user-inactivity-downloads.html">ダウンロードページへ</a></div>
+    </div>
+
+    <section>
+      <h2>このスクリプトでできること</h2>
+      <ul>
+        <li>全ユーザーを取得し、最終サインイン時刻を評価</li>
+        <li>しきい値日数（既定90日）で非アクティブ判定</li>
+        <li>ユーザータイプ別の未使用率を集計</li>
+        <li>HTML / CSV / JSON / Markdown 形式で出力</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>前提環境</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>要件</th></tr></thead>
+          <tbody>
+            <tr><td>PowerShell</td><td>Windows PowerShell 5.1 以上</td></tr>
+            <tr><td>モジュール</td><td>Microsoft.Graph.Authentication（Microsoft Graph PowerShell SDK）</td></tr>
+            <tr><td>必要権限</td><td>User.Read.All / Directory.Read.All / AuditLog.Read.All</td></tr>
+            <tr><td>出力先</td><td>レポート出力フォルダーに書き込み可能</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>実行例</h2>
+      <pre><code>.\EntraUserInactivityReport.ps1
+  -TenantId "&lt;Tenant ID&gt;"
+  -RequiredSignedInAccount "&lt;監査アカウントUPN&gt;"
+  -InactiveDays 90</code></pre>
+      <pre><code>.\EntraUserInactivityReport.ps1 -GenerateSampleData -SampleUserCount 10000</code></pre>
+      <div class="callout">詳細ファイルとスクリプト本体は、ダウンロードページから取得できます。</div>
+    </section>
+  </main>
+  <footer>© 2026 Kururu Data · P-05 User Inactivity Audit</footer>
+</body>
+</html>
