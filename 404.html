@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found | Kururu Data</title>
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      var map = {
+        '/entra-user-inactivity-audit.html/entra-user-inactivity-downloads.html/': '/entra-user-inactivity-downloads.html/',
+        '/entra-user-inactivity-audit.html/entra-user-inactivity-downloads.html': '/entra-user-inactivity-downloads.html/'
+      };
+      if (map[path]) {
+        window.location.replace(map[path]);
+      }
+    })();
+  </script>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; background: linear-gradient(180deg, #123126, #e9f5ee); color: #12231d; }
+    .card { background: #fff; border: 1px solid #cfe0d5; border-radius: 14px; padding: 24px; max-width: 640px; text-align: center; }
+    a { color: #1d4e3d; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>ページが見つかりません</h1>
+    <p>URLが変更された可能性があります。以下からアクセスしてください。</p>
+    <p><a href="/entra-user-inactivity-downloads.html/">ダウンロードページへ</a></p>
+    <p><a href="/entra-user-inactivity-audit.html/">ユーザー監査ガイドへ</a></p>
+  </div>
+</body>
+</html>
